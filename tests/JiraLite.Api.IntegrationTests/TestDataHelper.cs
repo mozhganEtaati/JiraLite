@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Net.Http.Headers;
 
 namespace JiraLite.Api.IntegrationTests;
 
@@ -28,10 +29,21 @@ public static class TestDataHelper
 
     public static async Task<Guid> CreateWorkspaceAsync(HttpClient client, string accessToken)
     {
-        client.DefaultRequestHeaders.Authorization = new("Bearer", accessToken);
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            throw new InvalidOperationException("Access token is null or empty");
+        }
+
+        client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {accessToken}");
 
         var orgResponse = await client.PostAsJsonAsync("/api/organizations", new { name = $"Org-{Guid.NewGuid():N}" });
-        orgResponse.EnsureSuccessStatusCode();
+
+        if (!orgResponse.IsSuccessStatusCode)
+        {
+            var content = await orgResponse.Content.ReadAsStringAsync();
+            throw new InvalidOperationException($"Failed to create organization: {orgResponse.StatusCode} - {content}");
+        }
+
         var org = await orgResponse.Content.ReadFromJsonAsync<JsonElement>();
         var orgId = org.GetProperty("id").GetGuid();
 

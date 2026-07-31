@@ -9,6 +9,7 @@ using JiraLite.Api.Common.Infrastructure.BackgroundJobs;
 using JiraLite.Api.Common.Infrastructure.FileStorage;
 using JiraLite.Api.Common.Infrastructure.Persistence;
 using JiraLite.Api.Features.Auth;
+using JiraLite.Api.Features.Projects;
 using JiraLite.Api.Features.Teams;
 using JiraLite.Api.Features.Users;
 using JiraLite.Api.Features.Workspaces;
@@ -232,6 +233,8 @@ DeleteTeam.MapEndpoint(app);
 AddTeamMember.MapEndpoint(app);
 RemoveTeamMember.MapEndpoint(app);
 SetTeamLead.MapEndpoint(app);
+
+CreateProject.MapEndpoint(app);
 
 app.Run();
 

@@ -23,6 +23,8 @@ public class JiraLiteApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:Default"] = _sqlContainer.GetConnectionString(),
+                ["Jwt:Issuer"] = "JiraLite",
+                ["Jwt:Audience"] = "JiraLite",
                 ["Jwt:SigningKey"] = "integration-test-signing-key-not-for-production-1234567890",
                 ["FileStorage:RootPath"] = Path.Combine(Path.GetTempPath(), "jiralite-tests", Guid.NewGuid().ToString())
             });
