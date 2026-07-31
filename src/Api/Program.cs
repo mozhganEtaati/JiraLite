@@ -305,6 +305,7 @@ ChangeProjectMemberRole.MapEndpoint(app);
 RemoveProjectMember.MapEndpoint(app);
 ListBoards.MapEndpoint(app);
 GetBoard.MapEndpoint(app);
+GetBoardIssues.MapEndpoint(app);
 CreateBoard.MapEndpoint(app);
 RenameBoard.MapEndpoint(app);
 DeleteBoard.MapEndpoint(app);
