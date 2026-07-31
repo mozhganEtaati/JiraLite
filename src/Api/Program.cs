@@ -271,6 +271,8 @@ RemoveProjectMember.MapEndpoint(app);
 ListBoards.MapEndpoint(app);
 GetBoard.MapEndpoint(app);
 CreateBoard.MapEndpoint(app);
+RenameBoard.MapEndpoint(app);
+DeleteBoard.MapEndpoint(app);
 
 app.Run();
 
