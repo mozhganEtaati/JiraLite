@@ -11,6 +11,7 @@ using JiraLite.Api.Common.Infrastructure.Persistence;
 using JiraLite.Api.Features.Auth;
 using JiraLite.Api.Features.Boards;
 using JiraLite.Api.Features.Projects;
+using JiraLite.Api.Features.Sprints;
 using JiraLite.Api.Features.Teams;
 using JiraLite.Api.Features.Users;
 using JiraLite.Api.Features.Workspaces;
@@ -120,6 +121,9 @@ builder.Services.AddScoped<IAuthorizationHandler, ProjectWorkspaceAdminAuthoriza
 builder.Services.AddScoped<IAuthorizationHandler, BoardViewAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, BoardManageAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, BoardContributeAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, SprintViewAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, SprintContributeAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, SprintManageAuthorizationHandler>();
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("WorkspaceMember", policy => policy.RequireAuthenticatedUser().AddRequirements(new WorkspaceMemberRequirement()))
@@ -133,7 +137,10 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("ProjectWorkspaceAdmin", policy => policy.RequireAuthenticatedUser().AddRequirements(new ProjectWorkspaceAdminRequirement()))
     .AddPolicy("BoardView", policy => policy.RequireAuthenticatedUser().AddRequirements(new BoardViewRequirement()))
     .AddPolicy("BoardManage", policy => policy.RequireAuthenticatedUser().AddRequirements(new BoardManageRequirement()))
-    .AddPolicy("BoardContribute", policy => policy.RequireAuthenticatedUser().AddRequirements(new BoardContributeRequirement()));
+    .AddPolicy("BoardContribute", policy => policy.RequireAuthenticatedUser().AddRequirements(new BoardContributeRequirement()))
+    .AddPolicy("SprintView", policy => policy.RequireAuthenticatedUser().AddRequirements(new SprintViewRequirement()))
+    .AddPolicy("SprintContribute", policy => policy.RequireAuthenticatedUser().AddRequirements(new SprintContributeRequirement()))
+    .AddPolicy("SprintManage", policy => policy.RequireAuthenticatedUser().AddRequirements(new SprintManageRequirement()));
 
 // ---- Swagger / OpenAPI ----
 builder.Services.AddEndpointsApiExplorer();
@@ -277,6 +284,9 @@ AddColumn.MapEndpoint(app);
 EditColumn.MapEndpoint(app);
 DeleteColumn.MapEndpoint(app);
 ReorderColumns.MapEndpoint(app);
+CreateSprint.MapEndpoint(app);
+ListSprints.MapEndpoint(app);
+GetSprint.MapEndpoint(app);
 
 app.Run();
 
