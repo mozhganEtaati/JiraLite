@@ -99,4 +99,22 @@ public class DeleteBoardTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetim
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
+
+    [Fact]
+    public async Task A_board_with_issues_on_any_of_its_columns_cannot_be_deleted()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+        var seeded = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+
+        var secondBoardResponse = await client.PostAsJsonAsync(
+            $"/api/projects/{seeded.ProjectId}/boards", new { name = "Second Board", type = "Kanban" });
+        secondBoardResponse.EnsureSuccessStatusCode();
+
+        await TestDataHelper.CreateIssueAsync(client, seeded.ProjectId);
+
+        var response = await client.DeleteAsync($"/api/boards/{seeded.BoardId}");
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
 }

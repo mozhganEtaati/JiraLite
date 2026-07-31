@@ -325,6 +325,7 @@ ListIssues.MapEndpoint(app);
 ListSubtasks.MapEndpoint(app);
 EditIssue.MapEndpoint(app);
 MoveIssue.MapEndpoint(app);
+DeleteIssue.MapEndpoint(app);
 
 app.Run();
 

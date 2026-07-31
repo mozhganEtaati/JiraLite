@@ -113,4 +113,30 @@ public class ColumnTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
         var toDoColumn = await db.BoardColumns.AsNoTracking().SingleAsync(c => c.BoardId == boardId && c.Name == "To Do");
         Assert.False(toDoColumn.IsDefault);
     }
+
+    [Fact]
+    public async Task Deleting_a_column_with_an_issue_placed_on_it_is_rejected()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+        var seeded = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+        var issueId = await TestDataHelper.CreateIssueAsync(client, seeded.ProjectId);
+
+        // Move off the sole-default column first so this test isolates the Issue-presence guard
+        // from the separate "can't delete the only default column" guard.
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
+        var inProgressColumnId = await db.BoardColumns.Where(c => c.BoardId == seeded.BoardId && c.Name == "In Progress").Select(c => c.Id).SingleAsync();
+
+        var getIssueResponse = await client.GetAsync($"/api/issues/{issueId}");
+        var issueBody = await getIssueResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var moveResponse = await client.PatchAsJsonAsync(
+            $"/api/issues/{issueId}/move",
+            new { boardColumnId = inProgressColumnId, rowVersion = issueBody.GetProperty("rowVersion").GetString() });
+        moveResponse.EnsureSuccessStatusCode();
+
+        var response = await client.DeleteAsync($"/api/boards/{seeded.BoardId}/columns/{inProgressColumnId}");
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
 }

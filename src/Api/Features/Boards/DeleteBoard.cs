@@ -5,9 +5,8 @@ using Microsoft.EntityFrameworkCore;
 namespace JiraLite.Api.Features.Boards;
 
 /// <summary>
-/// spec/06-boards.md BR-04 (last Board in a Project), BR-09 (any Sprint, including Completed,
-/// blocks delete). BR-05 (Issue-presence guard) is deferred to Phase 4 — no Issue entity exists
-/// yet to check against; this guard must be added when Issue is introduced.
+/// spec/06-boards.md BR-04 (last Board in a Project), BR-05 (Issue-presence guard), BR-09 (any
+/// Sprint, including Completed, blocks delete).
 /// </summary>
 public static class DeleteBoard
 {
@@ -34,6 +33,14 @@ public static class DeleteBoard
                 return ProblemResults.Conflict(
                     "https://jiralite.dev/errors/board-has-sprints",
                     "This Board cannot be deleted while any Sprint (including Completed ones) references it.");
+            }
+
+            var columnIds = await db.BoardColumns.Where(c => c.BoardId == boardId).Select(c => c.Id).ToListAsync(cancellationToken);
+            if (await db.Issues.AnyAsync(i => columnIds.Contains(i.BoardColumnId), cancellationToken))
+            {
+                return ProblemResults.Conflict(
+                    "https://jiralite.dev/errors/board-has-issues",
+                    "This Board cannot be deleted while it has Issues currently placed on any of its columns.");
             }
 
             await db.BoardColumns.Where(c => c.BoardId == boardId).ExecuteDeleteAsync(cancellationToken);

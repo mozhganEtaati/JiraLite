@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 namespace JiraLite.Api.Features.Boards;
 
 /// <summary>
-/// spec/06-boards.md BR-01 (last column on a Board) and BR-02 (deleting the sole Default or sole
-/// Done column would leave the Board without one, same invariant EditColumn enforces on unset).
-/// BR-03 (Issue-presence guard) is deferred to Phase 4 — no Issue entity exists yet to check against.
+/// spec/06-boards.md BR-01 (last column on a Board), BR-02 (deleting the sole Default or sole
+/// Done column would leave the Board without one, same invariant EditColumn enforces on unset),
+/// and BR-03 (Issue-presence guard).
 /// </summary>
 public static class DeleteColumn
 {
@@ -45,6 +45,13 @@ public static class DeleteColumn
                 {
                     return Results.BadRequest(new { detail = "Cannot delete the only Done column without another column already marked Done." });
                 }
+            }
+
+            if (await db.Issues.AnyAsync(i => i.BoardColumnId == columnId, cancellationToken))
+            {
+                return ProblemResults.Conflict(
+                    "https://jiralite.dev/errors/column-has-issues",
+                    "This Column cannot be deleted while it has Issues currently placed on it.");
             }
 
             db.BoardColumns.Remove(column);
