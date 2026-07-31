@@ -2253,7 +2253,7 @@ git commit -m "feat: add Project member management endpoints"
 **Interfaces:**
 - Consumes: `ProjectMember` from Task 2.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Workspaces/RemoveMemberCascadeTests.cs
@@ -2312,12 +2312,12 @@ public class RemoveMemberCascadeTests : IClassFixture<JiraLiteApiFactory>, IAsyn
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter RemoveMemberCascadeTests`
 Expected: FAIL — `ProjectMember` row is still present after removal (current `RemoveMember.cs` doesn't touch `ProjectMember`).
 
-- [ ] **Step 3: Retrofit RemoveMember.cs**
+- [x] **Step 3: Retrofit RemoveMember.cs**
 
 In `src/Api/Features/Workspaces/RemoveMember.cs`, after the existing Team-membership cleanup block (`db.TeamMembers.RemoveRange(teamMemberships);`) and before `db.WorkspaceMembers.Remove(member);`, add:
 
@@ -2338,16 +2338,16 @@ Also update the file's leading XML doc comment, replacing the line `/// ProjectM
 /// Cascades to ProjectMember (BR-08) now that Project/ProjectMember exist (Phase 3).
 ```
 
-- [ ] **Step 4: Retrofit LeaveWorkspace.cs identically**
+- [x] **Step 4: Retrofit LeaveWorkspace.cs identically**
 
 In `src/Api/Features/Workspaces/LeaveWorkspace.cs`, after its existing `db.TeamMembers.RemoveRange(teamMemberships);` line and before `db.WorkspaceMembers.Remove(member);`, add the identical block from Step 3 (same variable names — `userId`, `workspaceId`, and `cancellationToken` are already in scope in this handler).
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter RemoveMemberCascadeTests`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Workspaces/RemoveMember.cs src/Api/Features/Workspaces/LeaveWorkspace.cs tests/JiraLite.Api.IntegrationTests/Workspaces/RemoveMemberCascadeTests.cs
