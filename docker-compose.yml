@@ -9,6 +9,9 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Default: "Server=sqlserver,1433;Database=JiraLite;User Id=sa;Password=${SA_PASSWORD:-Dev_OnlyPassw0rd!};TrustServerCertificate=True"
       Jwt__SigningKey: "dev-only-signing-key-not-for-production-use-1234567890"
+      FileStorage__RootPath: "/app/storage"
+    volumes:
+      - file-storage:/app/storage
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -31,3 +34,4 @@ services:
 
 volumes:
   sqlserver-data:
+  file-storage:

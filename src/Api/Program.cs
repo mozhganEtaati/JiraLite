@@ -6,9 +6,16 @@ using Hangfire.SqlServer;
 using JiraLite.Api.Common.Auth;
 using JiraLite.Api.Common.Behaviors;
 using JiraLite.Api.Common.Infrastructure.BackgroundJobs;
+using JiraLite.Api.Common.Infrastructure.FileStorage;
 using JiraLite.Api.Common.Infrastructure.Persistence;
+using JiraLite.Api.Features.Auth;
+using JiraLite.Api.Features.Teams;
+using JiraLite.Api.Features.Users;
+using JiraLite.Api.Features.Workspaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
@@ -47,6 +54,21 @@ builder.Services.AddDbContext<JiraLiteDbContext>(options =>
 // ---- FluentValidation (validators auto-discovered from this assembly) ----
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
+// ---- Auth building blocks (spec/01-authentication.md) ----
+builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
+builder.Services.AddSingleton<ITokenService, JwtTokenService>();
+
+// ---- File storage (spec/11-attachments.md pattern; first consumer is Avatar upload, spec/02-users.md) ----
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddOptions<FileStorageOptions>()
+    .Bind(builder.Configuration.GetSection(FileStorageOptions.SectionName))
+    .ValidateOnStart();
+builder.Services.AddScoped<IFileStorage, LocalDiskFileStorage>();
+
+// ---- Workspace invitation config (spec/03-workspaces.md BR-07) ----
+builder.Services.AddOptions<InvitationOptions>()
+    .Bind(builder.Configuration.GetSection(InvitationOptions.SectionName));
+
 // ---- Problem Details (spec/19-api-guidelines.md §9) ----
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails(options =>
@@ -74,7 +96,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ClockSkew = TimeSpan.FromSeconds(30)
         };
     });
-builder.Services.AddAuthorization();
+// ---- Authorization policies (spec/16-rbac.md FR-01 — named policies, never inline role checks) ----
+builder.Services.AddScoped<IAuthorizationHandler, WorkspaceMemberAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, WorkspaceAdminAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, OrganizationOwnerAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, TeamViewAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, TeamManagementAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, TeamWorkspaceAdminAuthorizationHandler>();
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("WorkspaceMember", policy => policy.RequireAuthenticatedUser().AddRequirements(new WorkspaceMemberRequirement()))
+    .AddPolicy("WorkspaceAdmin", policy => policy.RequireAuthenticatedUser().AddRequirements(new WorkspaceAdminRequirement()))
+    .AddPolicy("OrganizationOwner", policy => policy.RequireAuthenticatedUser().AddRequirements(new OrganizationOwnerRequirement()))
+    .AddPolicy("TeamView", policy => policy.RequireAuthenticatedUser().AddRequirements(new TeamViewRequirement()))
+    .AddPolicy("TeamManagement", policy => policy.RequireAuthenticatedUser().AddRequirements(new TeamManagementRequirement()))
+    .AddPolicy("TeamWorkspaceAdmin", policy => policy.RequireAuthenticatedUser().AddRequirements(new TeamWorkspaceAdminRequirement()));
 
 // ---- Swagger / OpenAPI ----
 builder.Services.AddEndpointsApiExplorer();
@@ -130,6 +166,17 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Serve uploaded files (avatars for now) unauthenticated, matching the plain public-URL
+// shape in spec/02-users.md — unlike Attachments (Phase 4), which are private and go
+// through authenticated download/preview endpoints instead of static serving.
+var fileStorageOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<FileStorageOptions>>().Value;
+Directory.CreateDirectory(fileStorageOptions.RootPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.GetFullPath(fileStorageOptions.RootPath)),
+    RequestPath = "/files"
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -141,6 +188,50 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 });
 
 app.MapHealthChecks("/health");
+
+// ---- Feature endpoints (spec/20-coding-guidelines.md §2) ----
+Register.MapEndpoint(app);
+Login.MapEndpoint(app);
+Refresh.MapEndpoint(app);
+Logout.MapEndpoint(app);
+
+GetMyProfile.MapEndpoint(app);
+UpdateMyProfile.MapEndpoint(app);
+UploadAvatar.MapEndpoint(app);
+DeleteAvatar.MapEndpoint(app);
+GetNotificationPreferences.MapEndpoint(app);
+UpdateNotificationPreferences.MapEndpoint(app);
+GetPublicProfile.MapEndpoint(app);
+DeactivateAccount.MapEndpoint(app);
+
+CreateOrganization.MapEndpoint(app);
+ListMyOrganizations.MapEndpoint(app);
+GetOrganization.MapEndpoint(app);
+RenameOrganization.MapEndpoint(app);
+CreateWorkspace.MapEndpoint(app);
+ListMyWorkspaces.MapEndpoint(app);
+GetWorkspace.MapEndpoint(app);
+UpdateWorkspace.MapEndpoint(app);
+ArchiveWorkspace.MapEndpoint(app);
+GetMyWorkspaceRole.MapEndpoint(app);
+ListWorkspaceMembers.MapEndpoint(app);
+ChangeMemberRole.MapEndpoint(app);
+RemoveMember.MapEndpoint(app);
+LeaveWorkspace.MapEndpoint(app);
+ListInvitations.MapEndpoint(app);
+CreateInvitation.MapEndpoint(app);
+RevokeInvitation.MapEndpoint(app);
+AcceptInvitation.MapEndpoint(app);
+DeclineInvitation.MapEndpoint(app);
+
+CreateTeam.MapEndpoint(app);
+ListTeams.MapEndpoint(app);
+GetTeam.MapEndpoint(app);
+RenameTeam.MapEndpoint(app);
+DeleteTeam.MapEndpoint(app);
+AddTeamMember.MapEndpoint(app);
+RemoveTeamMember.MapEndpoint(app);
+SetTeamLead.MapEndpoint(app);
 
 app.Run();
 
