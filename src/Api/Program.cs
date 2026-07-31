@@ -276,6 +276,7 @@ DeleteBoard.MapEndpoint(app);
 AddColumn.MapEndpoint(app);
 EditColumn.MapEndpoint(app);
 DeleteColumn.MapEndpoint(app);
+ReorderColumns.MapEndpoint(app);
 
 app.Run();
 
