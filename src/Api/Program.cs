@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
@@ -81,18 +82,26 @@ builder.Services.AddProblemDetails(options =>
 });
 
 // ---- JWT Authentication skeleton (spec/01-authentication.md) — no user-facing endpoints yet ----
+// TokenValidationParameters is configured lazily from the bound IOptions<JwtOptions> (not the
+// `jwtOptions` snapshot above) so it always matches the key JwtTokenService signs with — reading
+// builder.Configuration directly here would capture a stale value under WebApplicationFactory,
+// which layers in its own config (e.g. a test-only SigningKey) only once the host is actually built.
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddJwtBearer();
+
+builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IOptions<JwtOptions>>((bearerOptions, boundJwtOptions) =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
+        var jwt = boundJwtOptions.Value;
+        bearerOptions.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = jwtOptions?.Issuer,
+            ValidIssuer = jwt.Issuer,
             ValidateAudience = true,
-            ValidAudience = jwtOptions?.Audience,
+            ValidAudience = jwt.Audience,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtOptions?.SigningKey ?? "dev-only-placeholder-key-not-for-production-1234567890")),
+                Encoding.UTF8.GetBytes(jwt.SigningKey ?? "dev-only-placeholder-key-not-for-production-1234567890")),
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromSeconds(30)
         };
