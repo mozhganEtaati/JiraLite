@@ -1097,7 +1097,7 @@ git commit -m "feat: add CreateProject with default Board/columns bootstrap"
 - Produces: policies `"ProjectView"`, `"ProjectManage"`, `"ProjectWorkspaceAdmin"` — consumed by every remaining Projects/Boards/Sprints task.
 - Produces: `file static class ProjectAuthorizationQueries` — internal to the auth file, not consumed elsewhere.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Projects/GetProjectTests.cs
@@ -1177,12 +1177,12 @@ public class GetProjectTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter GetProjectTests`
 Expected: FAIL — routes not mapped (404 instead of 200/403).
 
-- [ ] **Step 3: Write the authorization policies**
+- [x] **Step 3: Write the authorization policies**
 
 ```csharp
 // src/Api/Common/Auth/ProjectAuthorization.cs
@@ -1303,7 +1303,7 @@ public class ProjectWorkspaceAdminAuthorizationHandler(
 }
 ```
 
-- [ ] **Step 4: Write GetProject, ListProjects, GetMyProjectRole**
+- [x] **Step 4: Write GetProject, ListProjects, GetMyProjectRole**
 
 ```csharp
 // src/Api/Features/Projects/GetProject.cs
@@ -1430,7 +1430,7 @@ public static class GetMyProjectRole
 }
 ```
 
-- [ ] **Step 5: Register handlers and policies in Program.cs**
+- [x] **Step 5: Register handlers and policies in Program.cs**
 
 Add `using JiraLite.Api.Features.Projects;` (already added in Task 4). After the existing `builder.Services.AddScoped<IAuthorizationHandler, TeamWorkspaceAdminAuthorizationHandler>();` line, add:
 
@@ -1458,12 +1458,12 @@ ListProjects.MapEndpoint(app);
 GetMyProjectRole.MapEndpoint(app);
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter GetProjectTests`
 Expected: PASS (3 tests).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/Api/Common/Auth/ProjectAuthorization.cs src/Api/Features/Projects src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Projects
