@@ -3665,7 +3665,7 @@ git commit -m "feat: add ReorderColumns with per-column RowVersion concurrency"
 - Produces: policies `"SprintView"`, `"SprintContribute"`, `"SprintManage"` — consumed by Tasks 15-16.
 - Consumes: `"BoardContribute"`/`"BoardView"` (Task 10) for the boardId-routed list/create endpoints.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Sprints/SprintLifecycleTests.cs
@@ -3770,12 +3770,12 @@ public class SprintLifecycleTests : IClassFixture<JiraLiteApiFactory>, IAsyncLif
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter SprintLifecycleTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the Sprint-scoped authorization policies**
+- [x] **Step 3: Write the Sprint-scoped authorization policies**
 
 ```csharp
 // src/Api/Common/Auth/SprintAuthorization.cs
@@ -3869,7 +3869,7 @@ public class SprintManageAuthorizationHandler(
 }
 ```
 
-- [ ] **Step 4: Write CreateSprint, ListSprints, GetSprint**
+- [x] **Step 4: Write CreateSprint, ListSprints, GetSprint**
 
 ```csharp
 // src/Api/Features/Sprints/CreateSprint.cs
@@ -4026,7 +4026,7 @@ public static class GetSprint
 }
 ```
 
-- [ ] **Step 5: Register handlers, policies, and endpoints in Program.cs**
+- [x] **Step 5: Register handlers, policies, and endpoints in Program.cs**
 
 Add `using JiraLite.Api.Features.Sprints;` to the top. After the `BoardContributeAuthorizationHandler` registration line, add:
 
@@ -4052,12 +4052,12 @@ ListSprints.MapEndpoint(app);
 GetSprint.MapEndpoint(app);
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter SprintLifecycleTests`
 Expected: PASS (3 tests).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/Api/Common/Auth/SprintAuthorization.cs src/Api/Features/Sprints src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Sprints/SprintLifecycleTests.cs
