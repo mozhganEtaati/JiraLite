@@ -1937,7 +1937,7 @@ git commit -m "feat: add DeleteProject with cascade and ActivityLogEntry detach"
 **Interfaces:**
 - Consumes: `"ProjectView"`, `"ProjectManage"` policies from Task 5.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Projects/ProjectMemberTests.cs
@@ -2001,12 +2001,12 @@ public class ProjectMemberTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifet
 
 Add `using System.Text.Json;` at the top. Note: this test exercises the real `/api/workspaces/{workspaceId}/invitations` + accept-invitation flow already built in Phase 2 — check `src/Api/Features/Workspaces/CreateInvitation.cs` and `AcceptInvitation.cs` for the exact request/response field names and adjust this test's request bodies/routes if they differ from what's assumed here (`email`/`role` on create, `token` on accept, and whether accept is a flat `/api/workspaces/accept-invitation` route or nested — confirm against `Program.cs`'s registered routes before finalizing this test).
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ProjectMemberTests`
 Expected: FAIL — Project member routes not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Projects/ListProjectMembers.cs
@@ -2219,7 +2219,7 @@ public static class RemoveProjectMember
 }
 ```
 
-- [ ] **Step 4: Register endpoints in Program.cs**
+- [x] **Step 4: Register endpoints in Program.cs**
 
 After `DeleteProject.MapEndpoint(app);`, add:
 
@@ -2230,12 +2230,12 @@ ChangeProjectMemberRole.MapEndpoint(app);
 RemoveProjectMember.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ProjectMemberTests`
 Expected: PASS. If the invitation flow's actual request/response shape differs from what Step 1 assumed, fix the test to match `CreateInvitation.cs`/`AcceptInvitation.cs` rather than changing those files.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Projects/ListProjectMembers.cs src/Api/Features/Projects/AddProjectMember.cs src/Api/Features/Projects/ChangeProjectMemberRole.cs src/Api/Features/Projects/RemoveProjectMember.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Projects/ProjectMemberTests.cs
