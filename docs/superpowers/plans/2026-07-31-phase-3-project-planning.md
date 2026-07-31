@@ -1483,7 +1483,7 @@ git commit -m "feat: add Project-scoped authorization, GetProject, ListProjects,
 - Consumes: `"ProjectManage"` policy from Task 5.
 - Produces: the archived-project write-lock pattern (`ProblemResults.Conflict("https://jiralite.dev/errors/project-archived", ...)`) reused by `CreateBoard` (Task 10) and `CreateSprint` (Task 14).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Projects/EditArchiveProjectTests.cs
@@ -1550,12 +1550,12 @@ public class EditArchiveProjectTests : IClassFixture<JiraLiteApiFactory>, IAsync
 
 Add `using System.Text.Json;` at the top. Note: this test's second assertion (`boardResponse`) will not compile/pass until Task 10 maps `POST /api/projects/{projectId}/boards` — leave that assertion commented out until Task 10, or implement Tasks 6 and 10 together if running strict per-task TDD. For this task, keep only the first two assertions (edit + archive + unarchive) and add the board-blocked assertion back in as part of Task 10's test file instead.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter EditArchiveProjectTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Projects/EditProject.cs
@@ -1687,7 +1687,7 @@ public static class UnarchiveProject
 }
 ```
 
-- [ ] **Step 4: Register endpoints in Program.cs**
+- [x] **Step 4: Register endpoints in Program.cs**
 
 Add `using JiraLite.Api.Features.Projects;` (already present). After `GetMyProjectRole.MapEndpoint(app);`, add:
 
@@ -1697,7 +1697,7 @@ ArchiveProject.MapEndpoint(app);
 UnarchiveProject.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Trim the test to what this task delivers, then run it**
+- [x] **Step 5: Trim the test to what this task delivers, then run it**
 
 Remove the `boardResponse`/`unarchiveResponse` block's board-creation assertion from the test written in Step 1 (it depends on Task 10); keep only:
 
@@ -1727,7 +1727,7 @@ Remove the `boardResponse`/`unarchiveResponse` block's board-creation assertion 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter EditArchiveProjectTests`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Projects/EditProject.cs src/Api/Features/Projects/ArchiveProject.cs src/Api/Features/Projects/UnarchiveProject.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Projects/EditArchiveProjectTests.cs
