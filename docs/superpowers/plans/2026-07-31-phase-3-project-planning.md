@@ -2785,7 +2785,7 @@ git commit -m "feat: add Board-scoped authorization, ListBoards, GetBoard, Creat
 **Interfaces:**
 - Consumes: `"BoardManage"` policy from Task 10.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Boards/DeleteBoardTests.cs
@@ -2894,12 +2894,12 @@ public class DeleteBoardTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetim
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter DeleteBoardTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Boards/RenameBoard.cs
@@ -3001,7 +3001,7 @@ public static class DeleteBoard
 }
 ```
 
-- [ ] **Step 4: Register endpoints in Program.cs**
+- [x] **Step 4: Register endpoints in Program.cs**
 
 After `CreateBoard.MapEndpoint(app);`, add:
 
@@ -3010,12 +3010,12 @@ RenameBoard.MapEndpoint(app);
 DeleteBoard.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter DeleteBoardTests`
 Expected: PASS (3 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Boards/RenameBoard.cs src/Api/Features/Boards/DeleteBoard.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Boards/DeleteBoardTests.cs
