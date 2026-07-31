@@ -113,6 +113,9 @@ builder.Services.AddScoped<IAuthorizationHandler, OrganizationOwnerAuthorization
 builder.Services.AddScoped<IAuthorizationHandler, TeamViewAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TeamManagementAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TeamWorkspaceAdminAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ProjectViewAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ProjectManageAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ProjectWorkspaceAdminAuthorizationHandler>();
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("WorkspaceMember", policy => policy.RequireAuthenticatedUser().AddRequirements(new WorkspaceMemberRequirement()))
@@ -120,7 +123,10 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("OrganizationOwner", policy => policy.RequireAuthenticatedUser().AddRequirements(new OrganizationOwnerRequirement()))
     .AddPolicy("TeamView", policy => policy.RequireAuthenticatedUser().AddRequirements(new TeamViewRequirement()))
     .AddPolicy("TeamManagement", policy => policy.RequireAuthenticatedUser().AddRequirements(new TeamManagementRequirement()))
-    .AddPolicy("TeamWorkspaceAdmin", policy => policy.RequireAuthenticatedUser().AddRequirements(new TeamWorkspaceAdminRequirement()));
+    .AddPolicy("TeamWorkspaceAdmin", policy => policy.RequireAuthenticatedUser().AddRequirements(new TeamWorkspaceAdminRequirement()))
+    .AddPolicy("ProjectView", policy => policy.RequireAuthenticatedUser().AddRequirements(new ProjectViewRequirement()))
+    .AddPolicy("ProjectManage", policy => policy.RequireAuthenticatedUser().AddRequirements(new ProjectManageRequirement()))
+    .AddPolicy("ProjectWorkspaceAdmin", policy => policy.RequireAuthenticatedUser().AddRequirements(new ProjectWorkspaceAdminRequirement()));
 
 // ---- Swagger / OpenAPI ----
 builder.Services.AddEndpointsApiExplorer();
@@ -244,6 +250,9 @@ RemoveTeamMember.MapEndpoint(app);
 SetTeamLead.MapEndpoint(app);
 
 CreateProject.MapEndpoint(app);
+GetProject.MapEndpoint(app);
+ListProjects.MapEndpoint(app);
+GetMyProjectRole.MapEndpoint(app);
 
 app.Run();
 
