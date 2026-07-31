@@ -253,6 +253,9 @@ CreateProject.MapEndpoint(app);
 GetProject.MapEndpoint(app);
 ListProjects.MapEndpoint(app);
 GetMyProjectRole.MapEndpoint(app);
+EditProject.MapEndpoint(app);
+ArchiveProject.MapEndpoint(app);
+UnarchiveProject.MapEndpoint(app);
 
 app.Run();
 
