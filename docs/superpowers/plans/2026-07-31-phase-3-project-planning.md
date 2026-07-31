@@ -81,7 +81,7 @@ JiraLite.slnx (modified — add test project)
 - Produces: `JiraLiteApiFactory : WebApplicationFactory<Program>, IAsyncLifetime` — exposes `HttpClient CreateAuthenticatedClientAsync()`-free base client via `CreateClient()`; `Services` for direct `JiraLiteDbContext` access in tests.
 - Produces: `DatabaseResetHelper.ResetAsync(JiraLiteDbContext db)` — deletes all rows from every Phase 0-3 table in FK-safe order, for use in each test's setup.
 
-- [ ] **Step 1: Create the test project file**
+- [x] **Step 1: Create the test project file**
 
 ```xml
 <!-- tests/JiraLite.Api.IntegrationTests/JiraLite.Api.IntegrationTests.csproj -->
@@ -109,7 +109,7 @@ JiraLite.slnx (modified — add test project)
 </Project>
 ```
 
-- [ ] **Step 2: Add the project to the solution**
+- [x] **Step 2: Add the project to the solution**
 
 Modify `JiraLite.slnx` to add a `/tests/` folder with the new project, mirroring the existing `/src/Api/` entry:
 
@@ -126,7 +126,7 @@ Modify `JiraLite.slnx` to add a `/tests/` folder with the new project, mirroring
 </Solution>
 ```
 
-- [ ] **Step 3: Write the WebApplicationFactory with a real SQL Server container**
+- [x] **Step 3: Write the WebApplicationFactory with a real SQL Server container**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/JiraLiteApiFactory.cs
@@ -178,7 +178,7 @@ public class JiraLiteApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 }
 ```
 
-- [ ] **Step 4: Write the database reset helper**
+- [x] **Step 4: Write the database reset helper**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/DatabaseResetHelper.cs
@@ -210,7 +210,7 @@ public static class DatabaseResetHelper
 }
 ```
 
-- [ ] **Step 5: Write the smoke test**
+- [x] **Step 5: Write the smoke test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/HealthCheckTests.cs
@@ -237,12 +237,12 @@ public class HealthCheckTests : IClassFixture<JiraLiteApiFactory>
 }
 ```
 
-- [ ] **Step 6: Run it to verify the container boots and the test passes**
+- [x] **Step 6: Run it to verify the container boots and the test passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter HealthCheckTests`
 Expected: PASS (first run pulls the `mssql/server:2022-latest` image — may take a minute; requires Docker running locally).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add tests/JiraLite.Api.IntegrationTests JiraLite.slnx
@@ -265,7 +265,7 @@ git commit -m "test: scaffold Testcontainers-backed integration test project"
 - Produces: `ProjectRole.{ProjectAdmin,Developer,Viewer,All}`, `BoardType.{Scrum,Kanban,All}`, `SprintStatus.{Planned,Active,Completed}` string constants.
 - Produces: `TestDataHelper` with `RegisterAndLoginAsync(HttpClient)`, `CreateWorkspaceAsync(HttpClient, string token)` — seed helpers reused by every later test file.
 
-- [ ] **Step 1: Write the domain entities**
+- [x] **Step 1: Write the domain entities**
 
 ```csharp
 // src/Api/Common/Domain/Project.cs
@@ -421,7 +421,7 @@ public class ActivityLogEntry
 }
 ```
 
-- [ ] **Step 2: Write the EF Core configurations**
+- [x] **Step 2: Write the EF Core configurations**
 
 ```csharp
 // src/Api/Common/Infrastructure/Persistence/Configurations/ProjectConfiguration.cs
@@ -598,7 +598,7 @@ public class ActivityLogEntryConfiguration : IEntityTypeConfiguration<ActivityLo
 }
 ```
 
-- [ ] **Step 3: Register the new DbSets**
+- [x] **Step 3: Register the new DbSets**
 
 Modify `src/Api/Common/Infrastructure/Persistence/JiraLiteDbContext.cs`, adding after `TeamMembers`:
 
@@ -611,12 +611,12 @@ Modify `src/Api/Common/Infrastructure/Persistence/JiraLiteDbContext.cs`, adding 
     public DbSet<ActivityLogEntry> ActivityLogEntries => Set<ActivityLogEntry>();
 ```
 
-- [ ] **Step 4: Generate the migration**
+- [x] **Step 4: Generate the migration**
 
 Run: `dotnet ef migrations add AddProjectPlanningEntities --project src/Api --startup-project src/Api`
 Expected: creates `Migrations/{timestamp}_AddProjectPlanningEntities.cs` and updates `JiraLiteDbContextModelSnapshot.cs`. Open the generated migration and confirm it contains `CreateTable` calls for `Project`, `ProjectMember`, `Board`, `BoardColumn`, `Sprint`, `ActivityLogEntry`, the unique filtered index `IX_Sprint_BoardId_ActiveOnly`, and the `rowversion` column on `BoardColumn`.
 
-- [ ] **Step 5: Write the shared test data helper**
+- [x] **Step 5: Write the shared test data helper**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/TestDataHelper.cs
@@ -667,7 +667,7 @@ public static class TestDataHelper
 
 Add `using System.Text.Json;` to the top of the file (for `JsonElement`).
 
-- [ ] **Step 6: Write the schema/constraint test**
+- [x] **Step 6: Write the schema/constraint test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Persistence/ProjectPlanningSchemaTests.cs
@@ -735,12 +735,12 @@ public class ProjectPlanningSchemaTests : IClassFixture<JiraLiteApiFactory>, IAs
 }
 ```
 
-- [ ] **Step 7: Run the tests to verify they fail (entities don't exist yet before Steps 1-4) then pass after**
+- [x] **Step 7: Run the tests to verify they fail (entities don't exist yet before Steps 1-4) then pass after**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ProjectPlanningSchemaTests`
 Expected: PASS (both tests) once Steps 1-4 are done. If run before Step 1, this won't even compile — confirming the test drives out the entities.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/Api/Common/Domain src/Api/Common/Infrastructure/Persistence tests/JiraLite.Api.IntegrationTests
@@ -758,7 +758,7 @@ git commit -m "feat: add Project Planning domain entities, EF configurations, an
 **Interfaces:**
 - Produces: `CursorPagination.PageInfo(bool HasNextPage, string? NextCursor)`, `CursorPagination.DecodeOffset(string? cursor)`, `CursorPagination.EncodeOffset(int offset)` — consumed by `GetMyActivity` (Task 17) and any future cursor-paginated endpoint.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Pagination/CursorPaginationTests.cs
@@ -793,12 +793,12 @@ public class CursorPaginationTests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter CursorPaginationTests`
 Expected: FAIL to compile — `JiraLite.Api.Common.Pagination` namespace doesn't exist yet.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Common/Pagination/CursorPagination.cs
@@ -838,12 +838,12 @@ public static class CursorPagination
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter CursorPaginationTests`
 Expected: PASS (3 tests). Note: `Convert.FromBase64String` on a non-base64 string like `"not-a-valid-cursor"` throws `FormatException` directly, satisfying the third test without extra handling.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Api/Common/Pagination tests/JiraLite.Api.IntegrationTests/Pagination
@@ -863,7 +863,7 @@ git commit -m "feat: add opaque cursor pagination helper"
 - Consumes: existing `"WorkspaceAdmin"` policy; `Project`, `ProjectMember`, `ProjectRole`, `Board`, `BoardType`, `BoardColumn` from Task 2.
 - Produces: `POST /api/workspaces/{workspaceId}/projects` — used by every later Projects test as setup.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Projects/CreateProjectTests.cs
@@ -937,12 +937,12 @@ public class CreateProjectTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifet
 
 Add `using System.Text.Json;` at the top of the file.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter CreateProjectTests`
 Expected: FAIL — `POST /api/workspaces/{workspaceId}/projects` returns 404 (route not mapped).
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Projects/CreateProject.cs
@@ -1063,7 +1063,7 @@ public static class CreateProject
 }
 ```
 
-- [ ] **Step 4: Register the endpoint in Program.cs**
+- [x] **Step 4: Register the endpoint in Program.cs**
 
 Add `using JiraLite.Api.Features.Projects;` to the top of `src/Api/Program.cs`, and add after the `SetTeamLead.MapEndpoint(app);` line:
 
@@ -1071,12 +1071,12 @@ Add `using JiraLite.Api.Features.Projects;` to the top of `src/Api/Program.cs`, 
 CreateProject.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter CreateProjectTests`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Projects/CreateProject.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Projects
