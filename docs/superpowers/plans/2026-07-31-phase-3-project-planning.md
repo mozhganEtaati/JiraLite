@@ -3092,21 +3092,50 @@ public class ColumnTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
     public async Task Deleting_the_last_remaining_column_is_rejected()
     {
         var (client, boardId) = await SeedBoardAsync();
-
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
-        var columnIds = await db.BoardColumns.Where(c => c.BoardId == boardId).Select(c => c.Id).ToListAsync();
+        var toDoColumnId = await db.BoardColumns.Where(c => c.BoardId == boardId && c.Name == "To Do").Select(c => c.Id).SingleAsync();
+        var inProgressColumnId = await db.BoardColumns.Where(c => c.BoardId == boardId && c.Name == "In Progress").Select(c => c.Id).SingleAsync();
+        var doneColumnId = await db.BoardColumns.Where(c => c.BoardId == boardId && c.Name == "Done").Select(c => c.Id).SingleAsync();
 
-        // Delete two of the three default columns directly to isolate the "last column" guard.
-        foreach (var columnId in columnIds.Skip(1))
-        {
-            var deleteResponse = await client.DeleteAsync($"/api/boards/{boardId}/columns/{columnId}");
-            Assert.Equal(HttpStatusCode.OK, deleteResponse.StatusCode);
-        }
+        // Give "To Do" both flags first, so deleting "In Progress" and "Done" below doesn't
+        // trip the BR-02 sole-Default/sole-Done guards — this test isolates BR-01 only.
+        await client.PatchAsJsonAsync($"/api/boards/{boardId}/columns/{toDoColumnId}", new { isDoneColumn = true });
 
-        var lastResponse = await client.DeleteAsync($"/api/boards/{boardId}/columns/{columnIds[0]}");
+        var deleteInProgress = await client.DeleteAsync($"/api/boards/{boardId}/columns/{inProgressColumnId}");
+        Assert.Equal(HttpStatusCode.OK, deleteInProgress.StatusCode);
+        var deleteDone = await client.DeleteAsync($"/api/boards/{boardId}/columns/{doneColumnId}");
+        Assert.Equal(HttpStatusCode.OK, deleteDone.StatusCode);
+
+        var lastResponse = await client.DeleteAsync($"/api/boards/{boardId}/columns/{toDoColumnId}");
 
         Assert.Equal(HttpStatusCode.Conflict, lastResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Deleting_the_sole_default_column_without_another_default_is_rejected()
+    {
+        var (client, boardId) = await SeedBoardAsync();
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
+        var toDoColumnId = await db.BoardColumns.Where(c => c.BoardId == boardId && c.Name == "To Do").Select(c => c.Id).SingleAsync();
+
+        var response = await client.DeleteAsync($"/api/boards/{boardId}/columns/{toDoColumnId}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Deleting_the_sole_done_column_without_another_done_is_rejected()
+    {
+        var (client, boardId) = await SeedBoardAsync();
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
+        var doneColumnId = await db.BoardColumns.Where(c => c.BoardId == boardId && c.Name == "Done").Select(c => c.Id).SingleAsync();
+
+        var response = await client.DeleteAsync($"/api/boards/{boardId}/columns/{doneColumnId}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
@@ -3302,8 +3331,9 @@ using Microsoft.EntityFrameworkCore;
 namespace JiraLite.Api.Features.Boards;
 
 /// <summary>
-/// spec/06-boards.md BR-01 (last column on a Board). BR-03 (Issue-presence guard) is deferred to
-/// Phase 4 — no Issue entity exists yet to check against.
+/// spec/06-boards.md BR-01 (last column on a Board) and BR-02 (deleting the sole Default or sole
+/// Done column would leave the Board without one, same invariant EditColumn enforces on unset).
+/// BR-03 (Issue-presence guard) is deferred to Phase 4 — no Issue entity exists yet to check against.
 /// </summary>
 public static class DeleteColumn
 {
@@ -3323,6 +3353,24 @@ public static class DeleteColumn
                 return ProblemResults.Conflict(
                     "https://jiralite.dev/errors/last-column",
                     "A Board must retain at least one Column.");
+            }
+
+            if (column.IsDefault)
+            {
+                var anotherDefaultExists = await db.BoardColumns.AnyAsync(c => c.BoardId == boardId && c.Id != columnId && c.IsDefault, cancellationToken);
+                if (!anotherDefaultExists)
+                {
+                    return Results.BadRequest(new { detail = "Cannot delete the only default column without another column already marked default." });
+                }
+            }
+
+            if (column.IsDoneColumn)
+            {
+                var anotherDoneExists = await db.BoardColumns.AnyAsync(c => c.BoardId == boardId && c.Id != columnId && c.IsDoneColumn, cancellationToken);
+                if (!anotherDoneExists)
+                {
+                    return Results.BadRequest(new { detail = "Cannot delete the only Done column without another column already marked Done." });
+                }
             }
 
             db.BoardColumns.Remove(column);
@@ -3352,7 +3400,7 @@ DeleteColumn.MapEndpoint(app);
 - [ ] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ColumnTests`
-Expected: PASS (3 tests).
+Expected: PASS (5 tests).
 
 - [ ] **Step 6: Commit**
 
