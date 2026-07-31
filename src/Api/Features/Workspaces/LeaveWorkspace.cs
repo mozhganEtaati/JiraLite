@@ -45,6 +45,14 @@ public static class LeaveWorkspace
                 .ToListAsync(cancellationToken);
             db.TeamMembers.RemoveRange(teamMemberships);
 
+            // spec/03-workspaces.md BR-08: removing a WorkspaceMember cascades to their ProjectMember
+            // records within this Workspace's Projects — a user cannot retain project-level access
+            // after losing workspace membership.
+            var projectMemberships = await db.ProjectMembers
+                .Where(pm => pm.UserId == userId && db.Projects.Any(p => p.Id == pm.ProjectId && p.WorkspaceId == workspaceId))
+                .ToListAsync(cancellationToken);
+            db.ProjectMembers.RemoveRange(projectMemberships);
+
             db.WorkspaceMembers.Remove(member);
             await db.SaveChangesAsync(cancellationToken);
 
