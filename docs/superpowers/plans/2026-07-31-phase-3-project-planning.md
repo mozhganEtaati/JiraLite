@@ -4076,7 +4076,7 @@ git commit -m "feat: add Sprint-scoped authorization, CreateSprint, ListSprints,
 **Interfaces:**
 - Consumes: `"SprintContribute"` policy from Task 14; `IX_Sprint_BoardId_ActiveOnly` filtered unique index from Task 2.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Sprints/StartSprintTests.cs
@@ -4178,12 +4178,12 @@ public class StartSprintTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetim
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter StartSprintTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Sprints/EditSprint.cs
@@ -4317,7 +4317,7 @@ public static class StartSprint
 }
 ```
 
-- [ ] **Step 4: Register endpoints in Program.cs**
+- [x] **Step 4: Register endpoints in Program.cs**
 
 After `GetSprint.MapEndpoint(app);`, add:
 
@@ -4326,12 +4326,12 @@ EditSprint.MapEndpoint(app);
 StartSprint.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter StartSprintTests`
 Expected: PASS (3 tests). The second test's 409 comes from the pre-check (no real concurrency needed to trigger it in a single-threaded test) — the filtered index is the backstop for genuinely concurrent calls, not exercised by this sequential test.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Sprints/EditSprint.cs src/Api/Features/Sprints/StartSprint.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Sprints/StartSprintTests.cs
