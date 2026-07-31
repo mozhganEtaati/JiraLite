@@ -4793,21 +4793,21 @@ git commit -m "docs: document Phase 3->4 deferrals (Sprint carry-forward, board/
 
 **Files:** None created — verification only.
 
-- [ ] **Step 1: Build the whole solution**
+- [x] **Step 1: Build the whole solution**
 
 Run: `dotnet build`
 Expected: Solution builds with 0 errors/warnings (both `src/Api` and `tests/JiraLite.Api.IntegrationTests`).
 
-- [ ] **Step 2: Run the full integration test suite**
+- [x] **Step 2: Run the full integration test suite**
 
 Run: `dotnet test`
 Expected: All tests across every task in this plan pass (HealthCheck, schema, pagination, Projects x5, Workspaces cascade, Boards x3, Sprints x3, Users activity — roughly 30+ tests total).
 
-- [ ] **Step 3: Manual Swagger smoke pass per spec/21-roadmap.md Phase 3 Definition of Done**
+- [x] **Step 3: Manual Swagger smoke pass per spec/21-roadmap.md Phase 3 Definition of Done**
 
 Run: `docker compose up` (or `dotnet run --project src/Api`), open `/swagger`, and walk through: create a Project (verify default Board + 3 columns exist), archive it (verify write-lock on Board/Sprint creation), unarchive, add/change/remove a Project member, create a second Scrum Board, create and start a Sprint (verify a second Sprint on the same Board can't start while the first is Active), complete it, reorder columns on the default Board, and hit `GET /api/users/me/activity` to see it return an empty page. Confirm each matches the acceptance criteria in `spec/05-projects.md` §15, `spec/06-boards.md` §15, `spec/08-sprints.md` §15, and `spec/16-rbac.md` §15.
 
-- [ ] **Step 4: Fix any regressions found, then commit**
+- [x] **Step 4: Fix any regressions found, then commit**
 
 If Step 2 or Step 3 surfaces a bug, fix it in the relevant task's file (not a new bolt-on file), re-run the affected test(s), and commit the fix with a message referencing which behavior was broken. If nothing is found, no commit is needed for this task.
 
