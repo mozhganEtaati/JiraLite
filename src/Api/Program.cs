@@ -9,6 +9,7 @@ using JiraLite.Api.Common.Infrastructure.BackgroundJobs;
 using JiraLite.Api.Common.Infrastructure.FileStorage;
 using JiraLite.Api.Common.Infrastructure.Persistence;
 using JiraLite.Api.Features.Auth;
+using JiraLite.Api.Features.Boards;
 using JiraLite.Api.Features.Projects;
 using JiraLite.Api.Features.Teams;
 using JiraLite.Api.Features.Users;
@@ -116,6 +117,9 @@ builder.Services.AddScoped<IAuthorizationHandler, TeamWorkspaceAdminAuthorizatio
 builder.Services.AddScoped<IAuthorizationHandler, ProjectViewAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ProjectManageAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ProjectWorkspaceAdminAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, BoardViewAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, BoardManageAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, BoardContributeAuthorizationHandler>();
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("WorkspaceMember", policy => policy.RequireAuthenticatedUser().AddRequirements(new WorkspaceMemberRequirement()))
@@ -126,7 +130,10 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("TeamWorkspaceAdmin", policy => policy.RequireAuthenticatedUser().AddRequirements(new TeamWorkspaceAdminRequirement()))
     .AddPolicy("ProjectView", policy => policy.RequireAuthenticatedUser().AddRequirements(new ProjectViewRequirement()))
     .AddPolicy("ProjectManage", policy => policy.RequireAuthenticatedUser().AddRequirements(new ProjectManageRequirement()))
-    .AddPolicy("ProjectWorkspaceAdmin", policy => policy.RequireAuthenticatedUser().AddRequirements(new ProjectWorkspaceAdminRequirement()));
+    .AddPolicy("ProjectWorkspaceAdmin", policy => policy.RequireAuthenticatedUser().AddRequirements(new ProjectWorkspaceAdminRequirement()))
+    .AddPolicy("BoardView", policy => policy.RequireAuthenticatedUser().AddRequirements(new BoardViewRequirement()))
+    .AddPolicy("BoardManage", policy => policy.RequireAuthenticatedUser().AddRequirements(new BoardManageRequirement()))
+    .AddPolicy("BoardContribute", policy => policy.RequireAuthenticatedUser().AddRequirements(new BoardContributeRequirement()));
 
 // ---- Swagger / OpenAPI ----
 builder.Services.AddEndpointsApiExplorer();
@@ -261,6 +268,9 @@ ListProjectMembers.MapEndpoint(app);
 AddProjectMember.MapEndpoint(app);
 ChangeProjectMemberRole.MapEndpoint(app);
 RemoveProjectMember.MapEndpoint(app);
+ListBoards.MapEndpoint(app);
+GetBoard.MapEndpoint(app);
+CreateBoard.MapEndpoint(app);
 
 app.Run();
 
