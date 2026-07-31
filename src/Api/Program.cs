@@ -257,6 +257,10 @@ EditProject.MapEndpoint(app);
 ArchiveProject.MapEndpoint(app);
 UnarchiveProject.MapEndpoint(app);
 DeleteProject.MapEndpoint(app);
+ListProjectMembers.MapEndpoint(app);
+AddProjectMember.MapEndpoint(app);
+ChangeProjectMemberRole.MapEndpoint(app);
+RemoveProjectMember.MapEndpoint(app);
 
 app.Run();
 
