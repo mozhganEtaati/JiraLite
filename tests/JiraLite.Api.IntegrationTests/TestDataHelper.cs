@@ -53,4 +53,45 @@ public static class TestDataHelper
         var workspace = await wsResponse.Content.ReadFromJsonAsync<JsonElement>();
         return workspace.GetProperty("id").GetGuid();
     }
+
+    public sealed record SeededProject(Guid WorkspaceId, Guid ProjectId, Guid BoardId, Guid DefaultColumnId, Guid DoneColumnId);
+
+    /// <summary>Creates a Workspace + Project (with its auto-created default Board/columns) as the given caller. Used as setup by every Work Tracking test.</summary>
+    public static async Task<SeededProject> CreateProjectAsync(HttpClient client, string accessToken)
+    {
+        client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {accessToken}");
+        var workspaceId = await CreateWorkspaceAsync(client, accessToken);
+
+        var createResponse = await client.PostAsJsonAsync(
+            $"/api/workspaces/{workspaceId}/projects",
+            new { key = "JIRA", name = $"Project-{Guid.NewGuid():N}", description = (string?)null });
+        createResponse.EnsureSuccessStatusCode();
+        var project = await createResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var projectId = project.GetProperty("id").GetGuid();
+
+        var boardsResponse = await client.GetAsync($"/api/projects/{projectId}/boards");
+        boardsResponse.EnsureSuccessStatusCode();
+        var boards = await boardsResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var boardId = boards.GetProperty("items")[0].GetProperty("id").GetGuid();
+
+        var boardResponse = await client.GetAsync($"/api/boards/{boardId}");
+        boardResponse.EnsureSuccessStatusCode();
+        var board = await boardResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var columns = board.GetProperty("columns").EnumerateArray().ToList();
+        var defaultColumnId = columns.First(c => c.GetProperty("isDefault").GetBoolean()).GetProperty("id").GetGuid();
+        var doneColumnId = columns.First(c => c.GetProperty("isDoneColumn").GetBoolean()).GetProperty("id").GetGuid();
+
+        return new SeededProject(workspaceId, projectId, boardId, defaultColumnId, doneColumnId);
+    }
+
+    public static async Task<Guid> CreateIssueAsync(
+        HttpClient client, Guid projectId, string type = "Story", Guid? parentIssueId = null, string? title = null)
+    {
+        var response = await client.PostAsJsonAsync(
+            $"/api/projects/{projectId}/issues",
+            new { type, title = title ?? $"Issue-{Guid.NewGuid():N}", parentIssueId });
+        response.EnsureSuccessStatusCode();
+        var issue = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return issue.GetProperty("id").GetGuid();
+    }
 }

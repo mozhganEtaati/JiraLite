@@ -9,6 +9,7 @@ public static class DatabaseResetHelper
     private static readonly string[] TablesInDeleteOrder =
     [
         "ActivityLogEntry",
+        "IssueLabel", "Comment", "Attachment", "Label", "Issue",
         "Sprint", "BoardColumn", "Board",
         "ProjectMember", "Project",
         "TeamMember", "Team",

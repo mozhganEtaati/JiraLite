@@ -24,6 +24,12 @@ public class JiraLiteDbContext(DbContextOptions<JiraLiteDbContext> options) : Db
     public DbSet<Sprint> Sprints => Set<Sprint>();
     public DbSet<ActivityLogEntry> ActivityLogEntries => Set<ActivityLogEntry>();
 
+    public DbSet<Issue> Issues => Set<Issue>();
+    public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<Attachment> Attachments => Set<Attachment>();
+    public DbSet<Label> Labels => Set<Label>();
+    public DbSet<IssueLabel> IssueLabels => Set<IssueLabel>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(JiraLiteDbContext).Assembly);
