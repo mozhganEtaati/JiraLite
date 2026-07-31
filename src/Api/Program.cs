@@ -11,6 +11,7 @@ using JiraLite.Api.Common.Infrastructure.Persistence;
 using JiraLite.Api.Features.Auth;
 using JiraLite.Api.Features.Backlog;
 using JiraLite.Api.Features.Boards;
+using JiraLite.Api.Features.Comments;
 using JiraLite.Api.Features.Issues;
 using JiraLite.Api.Features.Projects;
 using JiraLite.Api.Features.Sprints;
@@ -333,6 +334,10 @@ DeleteIssue.MapEndpoint(app);
 GetProductBacklog.MapEndpoint(app);
 GetSprintBacklog.MapEndpoint(app);
 RepositionIssueRank.MapEndpoint(app);
+ListComments.MapEndpoint(app);
+AddComment.MapEndpoint(app);
+EditComment.MapEndpoint(app);
+DeleteComment.MapEndpoint(app);
 
 app.Run();
 
