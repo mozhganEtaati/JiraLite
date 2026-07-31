@@ -10,6 +10,7 @@ using JiraLite.Api.Common.Infrastructure.FileStorage;
 using JiraLite.Api.Common.Infrastructure.Persistence;
 using JiraLite.Api.Features.Auth;
 using JiraLite.Api.Features.Boards;
+using JiraLite.Api.Features.Issues;
 using JiraLite.Api.Features.Projects;
 using JiraLite.Api.Features.Sprints;
 using JiraLite.Api.Features.Teams;
@@ -317,6 +318,8 @@ EditSprint.MapEndpoint(app);
 StartSprint.MapEndpoint(app);
 CompleteSprint.MapEndpoint(app);
 DeleteSprint.MapEndpoint(app);
+
+CreateIssue.MapEndpoint(app);
 
 app.Run();
 

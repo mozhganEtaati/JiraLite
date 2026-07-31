@@ -1,6 +1,9 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Net.Http.Headers;
+using JiraLite.Api.Common.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace JiraLite.Api.IntegrationTests;
 
@@ -82,6 +85,43 @@ public static class TestDataHelper
         var doneColumnId = columns.First(c => c.GetProperty("isDoneColumn").GetBoolean()).GetProperty("id").GetGuid();
 
         return new SeededProject(workspaceId, projectId, boardId, defaultColumnId, doneColumnId);
+    }
+
+    /// <summary>
+    /// Registers a new user, invites+accepts them into the Workspace, and adds them as a Project
+    /// member with the given role. Leaves the client authenticated as that new member. Restores the
+    /// admin's auth afterward is the caller's responsibility if further admin calls are needed.
+    /// </summary>
+    public static async Task<RegisteredUser> AddProjectMemberAsync(
+        HttpClient client, JiraLiteApiFactory factory, Guid workspaceId, Guid projectId, string adminAccessToken, string projectRole)
+    {
+        var member = await RegisterAndLoginAsync(client);
+
+        client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {adminAccessToken}");
+        var inviteResponse = await client.PostAsJsonAsync(
+            $"/api/workspaces/{workspaceId}/invitations", new { email = member.Email, role = "Member" });
+        inviteResponse.EnsureSuccessStatusCode();
+
+        string token;
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
+            token = await db.Invitations
+                .Where(i => i.WorkspaceId == workspaceId && i.Email == member.Email)
+                .Select(i => i.Token)
+                .SingleAsync();
+        }
+
+        client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {member.AccessToken}");
+        var acceptResponse = await client.PostAsync($"/api/invitations/{token}/accept", null);
+        acceptResponse.EnsureSuccessStatusCode();
+
+        client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {adminAccessToken}");
+        var addResponse = await client.PostAsJsonAsync(
+            $"/api/projects/{projectId}/members", new { userId = member.UserId, role = projectRole });
+        addResponse.EnsureSuccessStatusCode();
+
+        return member;
     }
 
     public static async Task<Guid> CreateIssueAsync(
