@@ -20,7 +20,10 @@ public static class DatabaseResetHelper
     {
         foreach (var table in TablesInDeleteOrder)
         {
+            // Table names come from a fixed internal allowlist, never user input — safe to use with ExecuteSqlRaw.
+#pragma warning disable EF1002
             await db.Database.ExecuteSqlRawAsync($"DELETE FROM [{table}]");
+#pragma warning restore EF1002
         }
     }
 }
