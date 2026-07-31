@@ -319,6 +319,8 @@ EditSprint.MapEndpoint(app);
 StartSprint.MapEndpoint(app);
 CompleteSprint.MapEndpoint(app);
 DeleteSprint.MapEndpoint(app);
+AddSprintIssue.MapEndpoint(app);
+RemoveSprintIssue.MapEndpoint(app);
 
 CreateIssue.MapEndpoint(app);
 GetIssue.MapEndpoint(app);
