@@ -15,6 +15,7 @@ using JiraLite.Api.Features.Boards;
 using JiraLite.Api.Features.Comments;
 using JiraLite.Api.Features.Issues;
 using JiraLite.Api.Features.Labels;
+using JiraLite.Api.Features.Notifications;
 using JiraLite.Api.Features.Projects;
 using JiraLite.Api.Features.Sprints;
 using JiraLite.Api.Features.Teams;
@@ -353,6 +354,11 @@ EditLabel.MapEndpoint(app);
 DeleteLabel.MapEndpoint(app);
 AttachLabel.MapEndpoint(app);
 DetachLabel.MapEndpoint(app);
+
+ListNotifications.MapEndpoint(app);
+GetUnreadCount.MapEndpoint(app);
+MarkNotificationRead.MapEndpoint(app);
+MarkAllNotificationsRead.MapEndpoint(app);
 
 app.Run();
 
