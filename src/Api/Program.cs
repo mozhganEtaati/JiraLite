@@ -148,6 +148,13 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "JiraLite API", Version = "v1" });
 
+    // Every feature nests its DTOs as Request/Response inside the use-case class (spec/20-coding-
+    // guidelines.md §3), so the bare type name collides across features (e.g. Login+Request vs
+    // Register+Request) — qualify with the declaring type to keep schema IDs unique.
+    options.CustomSchemaIds(type => type.DeclaringType is not null
+        ? $"{type.DeclaringType.Name}{type.Name}"
+        : type.Name);
+
     var bearerScheme = new OpenApiSecurityScheme
     {
         Name = "Authorization",
