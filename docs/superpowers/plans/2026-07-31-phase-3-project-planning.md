@@ -3034,7 +3034,7 @@ git commit -m "feat: add RenameBoard and DeleteBoard with last-board and Sprint-
 **Interfaces:**
 - Consumes: `"BoardManage"` policy from Task 10.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Boards/ColumnTests.cs
@@ -3157,12 +3157,12 @@ public class ColumnTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
 
 Add `using System.Text.Json;` and `using System.Linq;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ColumnTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Boards/AddColumn.cs
@@ -3387,7 +3387,7 @@ public static class DeleteColumn
 }
 ```
 
-- [ ] **Step 4: Register endpoints in Program.cs**
+- [x] **Step 4: Register endpoints in Program.cs**
 
 After `DeleteBoard.MapEndpoint(app);`, add:
 
@@ -3397,12 +3397,12 @@ EditColumn.MapEndpoint(app);
 DeleteColumn.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ColumnTests`
 Expected: PASS (5 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Boards/AddColumn.cs src/Api/Features/Boards/EditColumn.cs src/Api/Features/Boards/DeleteColumn.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Boards/ColumnTests.cs
