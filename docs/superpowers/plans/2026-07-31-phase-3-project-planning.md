@@ -3423,7 +3423,7 @@ git commit -m "feat: add AddColumn, EditColumn, DeleteColumn with BR-01/BR-02 gu
 
 **Design note:** `spec/06-boards.md`'s illustrative reorder request (`{ orderedColumnIds: [...] }`) omits a concurrency token, but `spec/19-api-guidelines.md` §11 requires one for this exact endpoint, and §1 states this document's conventions win over a conflicting illustrative example. Because a bulk reorder touches every column on the Board — each with its own independent `RowVersion` — the request is shaped as a list of `{ columnId, rowVersion }` pairs (order given by list position) rather than a flat id array, so each row's concurrency token can be checked individually.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Boards/ReorderColumnsTests.cs
@@ -3534,12 +3534,12 @@ public class ReorderColumnsTests : IClassFixture<JiraLiteApiFactory>, IAsyncLife
 
 Add `using System.Text.Json;` and `using System.Linq;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ReorderColumnsTests`
 Expected: FAIL — route not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Boards/ReorderColumns.cs
@@ -3631,7 +3631,7 @@ public static class ReorderColumns
 }
 ```
 
-- [ ] **Step 4: Register the endpoint in Program.cs**
+- [x] **Step 4: Register the endpoint in Program.cs**
 
 After `DeleteColumn.MapEndpoint(app);`, add:
 
@@ -3639,12 +3639,12 @@ After `DeleteColumn.MapEndpoint(app);`, add:
 ReorderColumns.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ReorderColumnsTests`
 Expected: PASS (3 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Boards/ReorderColumns.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Boards/ReorderColumnsTests.cs
