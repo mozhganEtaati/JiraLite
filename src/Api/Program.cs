@@ -287,6 +287,8 @@ ReorderColumns.MapEndpoint(app);
 CreateSprint.MapEndpoint(app);
 ListSprints.MapEndpoint(app);
 GetSprint.MapEndpoint(app);
+EditSprint.MapEndpoint(app);
+StartSprint.MapEndpoint(app);
 
 app.Run();
 
