@@ -16,6 +16,29 @@ public class GlobalExceptionHandler(
         Exception exception,
         CancellationToken cancellationToken)
     {
+        // BadHttpRequestException (e.g. malformed/truncated JSON body) already carries the
+        // correct client-error status code — respect it instead of masking every such request
+        // as a 500. Everything else is a genuine unexpected failure.
+        if (exception is BadHttpRequestException badRequest)
+        {
+            logger.LogWarning(exception, "Bad request for {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
+
+            httpContext.Response.StatusCode = badRequest.StatusCode;
+
+            return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+            {
+                HttpContext = httpContext,
+                Exception = exception,
+                ProblemDetails =
+                {
+                    Type = "https://jiralite.dev/errors/bad-request",
+                    Title = "Bad Request",
+                    Status = badRequest.StatusCode,
+                    Detail = "The request could not be parsed."
+                }
+            });
+        }
+
         logger.LogError(exception, "Unhandled exception for {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
