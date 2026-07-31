@@ -14,6 +14,7 @@ using JiraLite.Api.Features.Attachments;
 using JiraLite.Api.Features.Boards;
 using JiraLite.Api.Features.Comments;
 using JiraLite.Api.Features.Issues;
+using JiraLite.Api.Features.Labels;
 using JiraLite.Api.Features.Projects;
 using JiraLite.Api.Features.Sprints;
 using JiraLite.Api.Features.Teams;
@@ -346,6 +347,12 @@ UploadAttachment.MapEndpoint(app);
 DownloadAttachment.MapEndpoint(app);
 PreviewAttachment.MapEndpoint(app);
 DeleteAttachment.MapEndpoint(app);
+ListLabels.MapEndpoint(app);
+CreateLabel.MapEndpoint(app);
+EditLabel.MapEndpoint(app);
+DeleteLabel.MapEndpoint(app);
+AttachLabel.MapEndpoint(app);
+DetachLabel.MapEndpoint(app);
 
 app.Run();
 
