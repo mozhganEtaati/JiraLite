@@ -4765,7 +4765,7 @@ git commit -m "feat: add GetMyActivity with cursor pagination (deferred from Pha
 
 **Interfaces:** None — documentation only.
 
-- [ ] **Step 1: Add a deferral note to the Phase 4 section**
+- [x] **Step 1: Add a deferral note to the Phase 4 section**
 
 In `spec/21-roadmap.md`, find the Phase 4 section (`## 6. Phase 4 — Work Tracking`). Immediately after its **Goals:** line and before **Deliverables:**, add:
 
@@ -4776,11 +4776,11 @@ In `spec/21-roadmap.md`, find the Phase 4 section (`## 6. Phase 4 — Work Track
 - **Board/Column delete Issue-presence guards** ([06-boards.md](06-boards.md) BR-03, BR-05): Phase 3's `DeleteBoard`/`DeleteColumn` only enforce the structural guards (last-Board, last-Column) and the Sprint-reference guard (BR-09); the Issue-presence checks must be added to both handlers once `Issue` exists.
 ```
 
-- [ ] **Step 2: Verify the edit renders correctly**
+- [x] **Step 2: Verify the edit renders correctly**
 
 Run: view the file (or `git diff spec/21-roadmap.md`) and confirm the note reads correctly inline with the rest of the Phase 4 section, doesn't break any Markdown table below it, and the phrasing matches the tone of the existing Phase 1 deferral note.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add spec/21-roadmap.md
