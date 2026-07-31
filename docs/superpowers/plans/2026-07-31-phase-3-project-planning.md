@@ -4582,7 +4582,7 @@ git commit -m "feat: add CompleteSprint (status transition) and DeleteSprint"
 **Interfaces:**
 - Consumes: `CursorPagination` from Task 3, `ActivityLogEntry` from Task 2.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Users/GetMyActivityTests.cs
@@ -4673,12 +4673,12 @@ public class GetMyActivityTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifet
 
 Add `using System.Text.Json;` and `using System.Linq;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter GetMyActivityTests`
 Expected: FAIL — route not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Users/GetMyActivity.cs
@@ -4736,7 +4736,7 @@ public static class GetMyActivity
 }
 ```
 
-- [ ] **Step 4: Register the endpoint in Program.cs**
+- [x] **Step 4: Register the endpoint in Program.cs**
 
 After `DeactivateAccount.MapEndpoint(app);`, add:
 
@@ -4744,12 +4744,12 @@ After `DeactivateAccount.MapEndpoint(app);`, add:
 GetMyActivity.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter GetMyActivityTests`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Users/GetMyActivity.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Users/GetMyActivityTests.cs
