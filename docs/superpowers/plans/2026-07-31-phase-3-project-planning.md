@@ -4352,7 +4352,7 @@ git commit -m "feat: add EditSprint and StartSprint with single-active-sprint gu
 
 **Deferral reminder:** `CompleteSprint` here only performs the status transition (`Active → Completed`, sets `CompletedAtUtc`). The BR-05 carry-forward-incomplete-Issues behavior is deferred to Phase 4 (see Task 18) since it requires querying `Issue`, which doesn't exist yet.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Sprints/CompleteDeleteSprintTests.cs
@@ -4449,12 +4449,12 @@ public class CompleteDeleteSprintTests : IClassFixture<JiraLiteApiFactory>, IAsy
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter CompleteDeleteSprintTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Sprints/CompleteSprint.cs
@@ -4549,7 +4549,7 @@ public static class DeleteSprint
 }
 ```
 
-- [ ] **Step 4: Register endpoints in Program.cs**
+- [x] **Step 4: Register endpoints in Program.cs**
 
 After `StartSprint.MapEndpoint(app);`, add:
 
@@ -4558,12 +4558,12 @@ CompleteSprint.MapEndpoint(app);
 DeleteSprint.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter CompleteDeleteSprintTests`
 Expected: PASS (3 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Sprints/CompleteSprint.cs src/Api/Features/Sprints/DeleteSprint.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Sprints/CompleteDeleteSprintTests.cs
