@@ -15,6 +15,9 @@ public class ProjectManageRequirement : IAuthorizationRequirement;
 /// <summary>Caller is WorkspaceMember.Role = Admin on the Workspace owning "projectId" — no ProjectAdmin fallback. spec/05-projects.md BR-07.</summary>
 public class ProjectWorkspaceAdminRequirement : IAuthorizationRequirement;
 
+/// <summary>Caller holds ProjectMember.Role in (Developer, ProjectAdmin) on "projectId", or Workspace Admin. spec/09-issues.md §14 (Create Issue is projectId-routed).</summary>
+public class ProjectContributeRequirement : IAuthorizationRequirement;
+
 file static class ProjectAuthorizationQueries
 {
     public static async Task<Guid?> GetWorkspaceIdAsync(JiraLiteDbContext db, Guid projectId) =>
@@ -111,5 +114,33 @@ public class ProjectWorkspaceAdminAuthorizationHandler(
         {
             context.Succeed(requirement);
         }
+    }
+}
+
+public class ProjectContributeAuthorizationHandler(
+    IHttpContextAccessor httpContextAccessor,
+    JiraLiteDbContext db) : AuthorizationHandler<ProjectContributeRequirement>
+{
+    protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, ProjectContributeRequirement requirement)
+    {
+        if (!context.User.TryGetUserId(out var userId)) return;
+        var projectId = RouteValueHelper.GetGuidRouteValue(httpContextAccessor.HttpContext, "projectId");
+        if (projectId is null) return;
+
+        var workspaceId = await ProjectAuthorizationQueries.GetWorkspaceIdAsync(db, projectId.Value);
+        if (workspaceId is null)
+        {
+            context.Succeed(requirement);
+            return;
+        }
+
+        if (await ProjectAuthorizationQueries.IsWorkspaceAdminAsync(db, workspaceId.Value, userId))
+        {
+            context.Succeed(requirement);
+            return;
+        }
+
+        var role = await ProjectAuthorizationQueries.GetProjectRoleAsync(db, projectId.Value, userId);
+        if (role is ProjectRole.Developer or ProjectRole.ProjectAdmin) context.Succeed(requirement);
     }
 }

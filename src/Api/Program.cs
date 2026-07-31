@@ -118,12 +118,21 @@ builder.Services.AddScoped<IAuthorizationHandler, TeamWorkspaceAdminAuthorizatio
 builder.Services.AddScoped<IAuthorizationHandler, ProjectViewAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ProjectManageAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ProjectWorkspaceAdminAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ProjectContributeAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, BoardViewAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, BoardManageAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, BoardContributeAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, SprintViewAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, SprintContributeAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, SprintManageAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, IssueViewAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, IssueContributeAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, IssueManageAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, CommentEditAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, CommentDeleteAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, AttachmentViewAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, AttachmentDeleteAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, LabelManageAuthorizationHandler>();
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("WorkspaceMember", policy => policy.RequireAuthenticatedUser().AddRequirements(new WorkspaceMemberRequirement()))
@@ -140,7 +149,16 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("BoardContribute", policy => policy.RequireAuthenticatedUser().AddRequirements(new BoardContributeRequirement()))
     .AddPolicy("SprintView", policy => policy.RequireAuthenticatedUser().AddRequirements(new SprintViewRequirement()))
     .AddPolicy("SprintContribute", policy => policy.RequireAuthenticatedUser().AddRequirements(new SprintContributeRequirement()))
-    .AddPolicy("SprintManage", policy => policy.RequireAuthenticatedUser().AddRequirements(new SprintManageRequirement()));
+    .AddPolicy("SprintManage", policy => policy.RequireAuthenticatedUser().AddRequirements(new SprintManageRequirement()))
+    .AddPolicy("ProjectContribute", policy => policy.RequireAuthenticatedUser().AddRequirements(new ProjectContributeRequirement()))
+    .AddPolicy("IssueView", policy => policy.RequireAuthenticatedUser().AddRequirements(new IssueViewRequirement()))
+    .AddPolicy("IssueContribute", policy => policy.RequireAuthenticatedUser().AddRequirements(new IssueContributeRequirement()))
+    .AddPolicy("IssueManage", policy => policy.RequireAuthenticatedUser().AddRequirements(new IssueManageRequirement()))
+    .AddPolicy("CommentEdit", policy => policy.RequireAuthenticatedUser().AddRequirements(new CommentEditRequirement()))
+    .AddPolicy("CommentDelete", policy => policy.RequireAuthenticatedUser().AddRequirements(new CommentDeleteRequirement()))
+    .AddPolicy("AttachmentView", policy => policy.RequireAuthenticatedUser().AddRequirements(new AttachmentViewRequirement()))
+    .AddPolicy("AttachmentDelete", policy => policy.RequireAuthenticatedUser().AddRequirements(new AttachmentDeleteRequirement()))
+    .AddPolicy("LabelManage", policy => policy.RequireAuthenticatedUser().AddRequirements(new LabelManageRequirement()));
 
 // ---- Swagger / OpenAPI ----
 builder.Services.AddEndpointsApiExplorer();
