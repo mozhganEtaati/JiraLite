@@ -2368,7 +2368,7 @@ git commit -m "fix: cascade ProjectMember removal on Workspace membership loss (
 - Produces: policies `"BoardView"`, `"BoardManage"`, `"BoardContribute"` — consumed by Tasks 11-14.
 - Consumes: `"ProjectView"`/`"ProjectManage"` (existing routes stay project-scoped for list/create).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Boards/BoardTests.cs
@@ -2453,12 +2453,12 @@ public class BoardTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter BoardTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the Board-scoped authorization policies**
+- [x] **Step 3: Write the Board-scoped authorization policies**
 
 ```csharp
 // src/Api/Common/Auth/BoardAuthorization.cs
@@ -2552,7 +2552,7 @@ public class BoardContributeAuthorizationHandler(
 }
 ```
 
-- [ ] **Step 4: Write ListBoards, GetBoard, CreateBoard**
+- [x] **Step 4: Write ListBoards, GetBoard, CreateBoard**
 
 ```csharp
 // src/Api/Features/Boards/ListBoards.cs
@@ -2735,7 +2735,7 @@ public static class CreateBoard
 }
 ```
 
-- [ ] **Step 5: Register handlers, policies, and endpoints in Program.cs**
+- [x] **Step 5: Register handlers, policies, and endpoints in Program.cs**
 
 Add `using JiraLite.Api.Features.Boards;` to the top. After the `ProjectWorkspaceAdminAuthorizationHandler` registration line, add:
 
@@ -2761,12 +2761,12 @@ GetBoard.MapEndpoint(app);
 CreateBoard.MapEndpoint(app);
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter BoardTests`
 Expected: PASS (3 tests). This also retroactively satisfies the board-creation assertion dropped from Task 6's test — optionally add it back to `EditArchiveProjectTests.cs` now, though `BoardTests.Creating_a_board_in_an_archived_project_is_rejected` already covers it.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/Api/Common/Auth/BoardAuthorization.cs src/Api/Features/Boards src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Boards/BoardTests.cs
