@@ -9,6 +9,7 @@ using JiraLite.Api.Common.Infrastructure.BackgroundJobs;
 using JiraLite.Api.Common.Infrastructure.FileStorage;
 using JiraLite.Api.Common.Infrastructure.Persistence;
 using JiraLite.Api.Features.Auth;
+using JiraLite.Api.Features.Backlog;
 using JiraLite.Api.Features.Boards;
 using JiraLite.Api.Features.Issues;
 using JiraLite.Api.Features.Projects;
@@ -326,6 +327,9 @@ ListSubtasks.MapEndpoint(app);
 EditIssue.MapEndpoint(app);
 MoveIssue.MapEndpoint(app);
 DeleteIssue.MapEndpoint(app);
+GetProductBacklog.MapEndpoint(app);
+GetSprintBacklog.MapEndpoint(app);
+RepositionIssueRank.MapEndpoint(app);
 
 app.Run();
 
