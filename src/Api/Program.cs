@@ -273,6 +273,9 @@ GetBoard.MapEndpoint(app);
 CreateBoard.MapEndpoint(app);
 RenameBoard.MapEndpoint(app);
 DeleteBoard.MapEndpoint(app);
+AddColumn.MapEndpoint(app);
+EditColumn.MapEndpoint(app);
+DeleteColumn.MapEndpoint(app);
 
 app.Run();
 
