@@ -256,6 +256,7 @@ GetMyProjectRole.MapEndpoint(app);
 EditProject.MapEndpoint(app);
 ArchiveProject.MapEndpoint(app);
 UnarchiveProject.MapEndpoint(app);
+DeleteProject.MapEndpoint(app);
 
 app.Run();
 
