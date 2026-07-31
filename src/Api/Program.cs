@@ -320,6 +320,9 @@ CompleteSprint.MapEndpoint(app);
 DeleteSprint.MapEndpoint(app);
 
 CreateIssue.MapEndpoint(app);
+GetIssue.MapEndpoint(app);
+ListIssues.MapEndpoint(app);
+ListSubtasks.MapEndpoint(app);
 
 app.Run();
 

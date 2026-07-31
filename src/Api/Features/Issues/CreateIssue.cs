@@ -180,16 +180,8 @@ public static class CreateIssue
                 }
             }
 
-            var reporter = await db.UserProfiles
-                .Where(p => p.UserId == userId)
-                .Select(p => new UserSummary(p.UserId, p.DisplayName, p.AvatarUrl))
-                .SingleAsync(cancellationToken);
-            UserSummary? assignee = request.AssigneeUserId is null
-                ? null
-                : await db.UserProfiles
-                    .Where(p => p.UserId == request.AssigneeUserId)
-                    .Select(p => new UserSummary(p.UserId, p.DisplayName, p.AvatarUrl))
-                    .SingleOrDefaultAsync(cancellationToken);
+            var reporter = (await db.GetUserSummaryAsync(userId, cancellationToken))!;
+            var assignee = request.AssigneeUserId is null ? null : await db.GetUserSummaryAsync(request.AssigneeUserId.Value, cancellationToken);
 
             return Results.Created(
                 $"/api/issues/{issue.Id}",
