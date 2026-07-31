@@ -10,6 +10,7 @@ using JiraLite.Api.Common.Infrastructure.FileStorage;
 using JiraLite.Api.Common.Infrastructure.Persistence;
 using JiraLite.Api.Features.Auth;
 using JiraLite.Api.Features.Backlog;
+using JiraLite.Api.Features.Attachments;
 using JiraLite.Api.Features.Boards;
 using JiraLite.Api.Features.Comments;
 using JiraLite.Api.Features.Issues;
@@ -71,6 +72,8 @@ builder.Services.AddOptions<FileStorageOptions>()
     .Bind(builder.Configuration.GetSection(FileStorageOptions.SectionName))
     .ValidateOnStart();
 builder.Services.AddScoped<IFileStorage, LocalDiskFileStorage>();
+builder.Services.AddOptions<AttachmentOptions>()
+    .Bind(builder.Configuration.GetSection(AttachmentOptions.SectionName));
 
 // ---- Workspace invitation config (spec/03-workspaces.md BR-07) ----
 builder.Services.AddOptions<InvitationOptions>()
@@ -338,6 +341,11 @@ ListComments.MapEndpoint(app);
 AddComment.MapEndpoint(app);
 EditComment.MapEndpoint(app);
 DeleteComment.MapEndpoint(app);
+ListAttachments.MapEndpoint(app);
+UploadAttachment.MapEndpoint(app);
+DownloadAttachment.MapEndpoint(app);
+PreviewAttachment.MapEndpoint(app);
+DeleteAttachment.MapEndpoint(app);
 
 app.Run();
 
