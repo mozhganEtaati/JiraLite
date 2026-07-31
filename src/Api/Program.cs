@@ -9,6 +9,9 @@ using JiraLite.Api.Common.Infrastructure.BackgroundJobs;
 using JiraLite.Api.Common.Infrastructure.FileStorage;
 using JiraLite.Api.Common.Infrastructure.Persistence;
 using JiraLite.Api.Features.Auth;
+using JiraLite.Api.Features.Boards;
+using JiraLite.Api.Features.Projects;
+using JiraLite.Api.Features.Sprints;
 using JiraLite.Api.Features.Teams;
 using JiraLite.Api.Features.Users;
 using JiraLite.Api.Features.Workspaces;
@@ -16,6 +19,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
@@ -80,18 +84,26 @@ builder.Services.AddProblemDetails(options =>
 });
 
 // ---- JWT Authentication skeleton (spec/01-authentication.md) — no user-facing endpoints yet ----
+// TokenValidationParameters is configured lazily from the bound IOptions<JwtOptions> (not the
+// `jwtOptions` snapshot above) so it always matches the key JwtTokenService signs with — reading
+// builder.Configuration directly here would capture a stale value under WebApplicationFactory,
+// which layers in its own config (e.g. a test-only SigningKey) only once the host is actually built.
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddJwtBearer();
+
+builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IOptions<JwtOptions>>((bearerOptions, boundJwtOptions) =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
+        var jwt = boundJwtOptions.Value;
+        bearerOptions.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = jwtOptions?.Issuer,
+            ValidIssuer = jwt.Issuer,
             ValidateAudience = true,
-            ValidAudience = jwtOptions?.Audience,
+            ValidAudience = jwt.Audience,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtOptions?.SigningKey ?? "dev-only-placeholder-key-not-for-production-1234567890")),
+                Encoding.UTF8.GetBytes(jwt.SigningKey ?? "dev-only-placeholder-key-not-for-production-1234567890")),
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromSeconds(30)
         };
@@ -103,6 +115,15 @@ builder.Services.AddScoped<IAuthorizationHandler, OrganizationOwnerAuthorization
 builder.Services.AddScoped<IAuthorizationHandler, TeamViewAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TeamManagementAuthorizationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, TeamWorkspaceAdminAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ProjectViewAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ProjectManageAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ProjectWorkspaceAdminAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, BoardViewAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, BoardManageAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, BoardContributeAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, SprintViewAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, SprintContributeAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, SprintManageAuthorizationHandler>();
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("WorkspaceMember", policy => policy.RequireAuthenticatedUser().AddRequirements(new WorkspaceMemberRequirement()))
@@ -110,13 +131,29 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("OrganizationOwner", policy => policy.RequireAuthenticatedUser().AddRequirements(new OrganizationOwnerRequirement()))
     .AddPolicy("TeamView", policy => policy.RequireAuthenticatedUser().AddRequirements(new TeamViewRequirement()))
     .AddPolicy("TeamManagement", policy => policy.RequireAuthenticatedUser().AddRequirements(new TeamManagementRequirement()))
-    .AddPolicy("TeamWorkspaceAdmin", policy => policy.RequireAuthenticatedUser().AddRequirements(new TeamWorkspaceAdminRequirement()));
+    .AddPolicy("TeamWorkspaceAdmin", policy => policy.RequireAuthenticatedUser().AddRequirements(new TeamWorkspaceAdminRequirement()))
+    .AddPolicy("ProjectView", policy => policy.RequireAuthenticatedUser().AddRequirements(new ProjectViewRequirement()))
+    .AddPolicy("ProjectManage", policy => policy.RequireAuthenticatedUser().AddRequirements(new ProjectManageRequirement()))
+    .AddPolicy("ProjectWorkspaceAdmin", policy => policy.RequireAuthenticatedUser().AddRequirements(new ProjectWorkspaceAdminRequirement()))
+    .AddPolicy("BoardView", policy => policy.RequireAuthenticatedUser().AddRequirements(new BoardViewRequirement()))
+    .AddPolicy("BoardManage", policy => policy.RequireAuthenticatedUser().AddRequirements(new BoardManageRequirement()))
+    .AddPolicy("BoardContribute", policy => policy.RequireAuthenticatedUser().AddRequirements(new BoardContributeRequirement()))
+    .AddPolicy("SprintView", policy => policy.RequireAuthenticatedUser().AddRequirements(new SprintViewRequirement()))
+    .AddPolicy("SprintContribute", policy => policy.RequireAuthenticatedUser().AddRequirements(new SprintContributeRequirement()))
+    .AddPolicy("SprintManage", policy => policy.RequireAuthenticatedUser().AddRequirements(new SprintManageRequirement()));
 
 // ---- Swagger / OpenAPI ----
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "JiraLite API", Version = "v1" });
+
+    // Every feature nests its DTOs as Request/Response inside the use-case class (spec/20-coding-
+    // guidelines.md §3), so the bare type name collides across features (e.g. Login+Request vs
+    // Register+Request) — qualify with the declaring type to keep schema IDs unique.
+    options.CustomSchemaIds(type => type.DeclaringType is not null
+        ? $"{type.DeclaringType.Name}{type.Name}"
+        : type.Name);
 
     var bearerScheme = new OpenApiSecurityScheme
     {
@@ -203,6 +240,7 @@ GetNotificationPreferences.MapEndpoint(app);
 UpdateNotificationPreferences.MapEndpoint(app);
 GetPublicProfile.MapEndpoint(app);
 DeactivateAccount.MapEndpoint(app);
+GetMyActivity.MapEndpoint(app);
 
 CreateOrganization.MapEndpoint(app);
 ListMyOrganizations.MapEndpoint(app);
@@ -232,6 +270,35 @@ DeleteTeam.MapEndpoint(app);
 AddTeamMember.MapEndpoint(app);
 RemoveTeamMember.MapEndpoint(app);
 SetTeamLead.MapEndpoint(app);
+
+CreateProject.MapEndpoint(app);
+GetProject.MapEndpoint(app);
+ListProjects.MapEndpoint(app);
+GetMyProjectRole.MapEndpoint(app);
+EditProject.MapEndpoint(app);
+ArchiveProject.MapEndpoint(app);
+UnarchiveProject.MapEndpoint(app);
+DeleteProject.MapEndpoint(app);
+ListProjectMembers.MapEndpoint(app);
+AddProjectMember.MapEndpoint(app);
+ChangeProjectMemberRole.MapEndpoint(app);
+RemoveProjectMember.MapEndpoint(app);
+ListBoards.MapEndpoint(app);
+GetBoard.MapEndpoint(app);
+CreateBoard.MapEndpoint(app);
+RenameBoard.MapEndpoint(app);
+DeleteBoard.MapEndpoint(app);
+AddColumn.MapEndpoint(app);
+EditColumn.MapEndpoint(app);
+DeleteColumn.MapEndpoint(app);
+ReorderColumns.MapEndpoint(app);
+CreateSprint.MapEndpoint(app);
+ListSprints.MapEndpoint(app);
+GetSprint.MapEndpoint(app);
+EditSprint.MapEndpoint(app);
+StartSprint.MapEndpoint(app);
+CompleteSprint.MapEndpoint(app);
+DeleteSprint.MapEndpoint(app);
 
 app.Run();
 

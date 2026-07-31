@@ -4,6 +4,7 @@ using JiraLite.Api.Common.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JiraLite.Api.Common.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(JiraLiteDbContext))]
-    partial class JiraLiteDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260731134953_AddProjectPlanningEntities")]
+    partial class AddProjectPlanningEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -411,15 +414,14 @@ namespace JiraLite.Api.Common.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BoardId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Sprint_BoardId_ActiveOnly")
+                        .HasFilter("[Status] = N'Active'");
+
                     b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("ProjectId");
-
-                    b.HasIndex(new[] { "BoardId" }, "IX_Sprint_BoardId");
-
-                    b.HasIndex(new[] { "BoardId" }, "IX_Sprint_BoardId_ActiveOnly")
-                        .IsUnique()
-                        .HasFilter("[Status] = N'Active'");
 
                     b.ToTable("Sprint", (string)null);
                 });

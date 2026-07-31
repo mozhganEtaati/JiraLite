@@ -81,7 +81,7 @@ JiraLite.slnx (modified — add test project)
 - Produces: `JiraLiteApiFactory : WebApplicationFactory<Program>, IAsyncLifetime` — exposes `HttpClient CreateAuthenticatedClientAsync()`-free base client via `CreateClient()`; `Services` for direct `JiraLiteDbContext` access in tests.
 - Produces: `DatabaseResetHelper.ResetAsync(JiraLiteDbContext db)` — deletes all rows from every Phase 0-3 table in FK-safe order, for use in each test's setup.
 
-- [ ] **Step 1: Create the test project file**
+- [x] **Step 1: Create the test project file**
 
 ```xml
 <!-- tests/JiraLite.Api.IntegrationTests/JiraLite.Api.IntegrationTests.csproj -->
@@ -109,7 +109,7 @@ JiraLite.slnx (modified — add test project)
 </Project>
 ```
 
-- [ ] **Step 2: Add the project to the solution**
+- [x] **Step 2: Add the project to the solution**
 
 Modify `JiraLite.slnx` to add a `/tests/` folder with the new project, mirroring the existing `/src/Api/` entry:
 
@@ -126,7 +126,7 @@ Modify `JiraLite.slnx` to add a `/tests/` folder with the new project, mirroring
 </Solution>
 ```
 
-- [ ] **Step 3: Write the WebApplicationFactory with a real SQL Server container**
+- [x] **Step 3: Write the WebApplicationFactory with a real SQL Server container**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/JiraLiteApiFactory.cs
@@ -178,7 +178,7 @@ public class JiraLiteApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 }
 ```
 
-- [ ] **Step 4: Write the database reset helper**
+- [x] **Step 4: Write the database reset helper**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/DatabaseResetHelper.cs
@@ -210,7 +210,7 @@ public static class DatabaseResetHelper
 }
 ```
 
-- [ ] **Step 5: Write the smoke test**
+- [x] **Step 5: Write the smoke test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/HealthCheckTests.cs
@@ -237,12 +237,12 @@ public class HealthCheckTests : IClassFixture<JiraLiteApiFactory>
 }
 ```
 
-- [ ] **Step 6: Run it to verify the container boots and the test passes**
+- [x] **Step 6: Run it to verify the container boots and the test passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter HealthCheckTests`
 Expected: PASS (first run pulls the `mssql/server:2022-latest` image — may take a minute; requires Docker running locally).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add tests/JiraLite.Api.IntegrationTests JiraLite.slnx
@@ -265,7 +265,7 @@ git commit -m "test: scaffold Testcontainers-backed integration test project"
 - Produces: `ProjectRole.{ProjectAdmin,Developer,Viewer,All}`, `BoardType.{Scrum,Kanban,All}`, `SprintStatus.{Planned,Active,Completed}` string constants.
 - Produces: `TestDataHelper` with `RegisterAndLoginAsync(HttpClient)`, `CreateWorkspaceAsync(HttpClient, string token)` — seed helpers reused by every later test file.
 
-- [ ] **Step 1: Write the domain entities**
+- [x] **Step 1: Write the domain entities**
 
 ```csharp
 // src/Api/Common/Domain/Project.cs
@@ -421,7 +421,7 @@ public class ActivityLogEntry
 }
 ```
 
-- [ ] **Step 2: Write the EF Core configurations**
+- [x] **Step 2: Write the EF Core configurations**
 
 ```csharp
 // src/Api/Common/Infrastructure/Persistence/Configurations/ProjectConfiguration.cs
@@ -598,7 +598,7 @@ public class ActivityLogEntryConfiguration : IEntityTypeConfiguration<ActivityLo
 }
 ```
 
-- [ ] **Step 3: Register the new DbSets**
+- [x] **Step 3: Register the new DbSets**
 
 Modify `src/Api/Common/Infrastructure/Persistence/JiraLiteDbContext.cs`, adding after `TeamMembers`:
 
@@ -611,12 +611,12 @@ Modify `src/Api/Common/Infrastructure/Persistence/JiraLiteDbContext.cs`, adding 
     public DbSet<ActivityLogEntry> ActivityLogEntries => Set<ActivityLogEntry>();
 ```
 
-- [ ] **Step 4: Generate the migration**
+- [x] **Step 4: Generate the migration**
 
 Run: `dotnet ef migrations add AddProjectPlanningEntities --project src/Api --startup-project src/Api`
 Expected: creates `Migrations/{timestamp}_AddProjectPlanningEntities.cs` and updates `JiraLiteDbContextModelSnapshot.cs`. Open the generated migration and confirm it contains `CreateTable` calls for `Project`, `ProjectMember`, `Board`, `BoardColumn`, `Sprint`, `ActivityLogEntry`, the unique filtered index `IX_Sprint_BoardId_ActiveOnly`, and the `rowversion` column on `BoardColumn`.
 
-- [ ] **Step 5: Write the shared test data helper**
+- [x] **Step 5: Write the shared test data helper**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/TestDataHelper.cs
@@ -667,7 +667,7 @@ public static class TestDataHelper
 
 Add `using System.Text.Json;` to the top of the file (for `JsonElement`).
 
-- [ ] **Step 6: Write the schema/constraint test**
+- [x] **Step 6: Write the schema/constraint test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Persistence/ProjectPlanningSchemaTests.cs
@@ -735,12 +735,12 @@ public class ProjectPlanningSchemaTests : IClassFixture<JiraLiteApiFactory>, IAs
 }
 ```
 
-- [ ] **Step 7: Run the tests to verify they fail (entities don't exist yet before Steps 1-4) then pass after**
+- [x] **Step 7: Run the tests to verify they fail (entities don't exist yet before Steps 1-4) then pass after**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ProjectPlanningSchemaTests`
 Expected: PASS (both tests) once Steps 1-4 are done. If run before Step 1, this won't even compile — confirming the test drives out the entities.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/Api/Common/Domain src/Api/Common/Infrastructure/Persistence tests/JiraLite.Api.IntegrationTests
@@ -758,7 +758,7 @@ git commit -m "feat: add Project Planning domain entities, EF configurations, an
 **Interfaces:**
 - Produces: `CursorPagination.PageInfo(bool HasNextPage, string? NextCursor)`, `CursorPagination.DecodeOffset(string? cursor)`, `CursorPagination.EncodeOffset(int offset)` — consumed by `GetMyActivity` (Task 17) and any future cursor-paginated endpoint.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Pagination/CursorPaginationTests.cs
@@ -793,12 +793,12 @@ public class CursorPaginationTests
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter CursorPaginationTests`
 Expected: FAIL to compile — `JiraLite.Api.Common.Pagination` namespace doesn't exist yet.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Common/Pagination/CursorPagination.cs
@@ -838,12 +838,12 @@ public static class CursorPagination
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter CursorPaginationTests`
 Expected: PASS (3 tests). Note: `Convert.FromBase64String` on a non-base64 string like `"not-a-valid-cursor"` throws `FormatException` directly, satisfying the third test without extra handling.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/Api/Common/Pagination tests/JiraLite.Api.IntegrationTests/Pagination
@@ -863,7 +863,7 @@ git commit -m "feat: add opaque cursor pagination helper"
 - Consumes: existing `"WorkspaceAdmin"` policy; `Project`, `ProjectMember`, `ProjectRole`, `Board`, `BoardType`, `BoardColumn` from Task 2.
 - Produces: `POST /api/workspaces/{workspaceId}/projects` — used by every later Projects test as setup.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Projects/CreateProjectTests.cs
@@ -937,12 +937,12 @@ public class CreateProjectTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifet
 
 Add `using System.Text.Json;` at the top of the file.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter CreateProjectTests`
 Expected: FAIL — `POST /api/workspaces/{workspaceId}/projects` returns 404 (route not mapped).
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Projects/CreateProject.cs
@@ -1063,7 +1063,7 @@ public static class CreateProject
 }
 ```
 
-- [ ] **Step 4: Register the endpoint in Program.cs**
+- [x] **Step 4: Register the endpoint in Program.cs**
 
 Add `using JiraLite.Api.Features.Projects;` to the top of `src/Api/Program.cs`, and add after the `SetTeamLead.MapEndpoint(app);` line:
 
@@ -1071,12 +1071,12 @@ Add `using JiraLite.Api.Features.Projects;` to the top of `src/Api/Program.cs`, 
 CreateProject.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter CreateProjectTests`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Projects/CreateProject.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Projects
@@ -1097,7 +1097,7 @@ git commit -m "feat: add CreateProject with default Board/columns bootstrap"
 - Produces: policies `"ProjectView"`, `"ProjectManage"`, `"ProjectWorkspaceAdmin"` — consumed by every remaining Projects/Boards/Sprints task.
 - Produces: `file static class ProjectAuthorizationQueries` — internal to the auth file, not consumed elsewhere.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Projects/GetProjectTests.cs
@@ -1177,12 +1177,12 @@ public class GetProjectTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter GetProjectTests`
 Expected: FAIL — routes not mapped (404 instead of 200/403).
 
-- [ ] **Step 3: Write the authorization policies**
+- [x] **Step 3: Write the authorization policies**
 
 ```csharp
 // src/Api/Common/Auth/ProjectAuthorization.cs
@@ -1303,7 +1303,7 @@ public class ProjectWorkspaceAdminAuthorizationHandler(
 }
 ```
 
-- [ ] **Step 4: Write GetProject, ListProjects, GetMyProjectRole**
+- [x] **Step 4: Write GetProject, ListProjects, GetMyProjectRole**
 
 ```csharp
 // src/Api/Features/Projects/GetProject.cs
@@ -1430,7 +1430,7 @@ public static class GetMyProjectRole
 }
 ```
 
-- [ ] **Step 5: Register handlers and policies in Program.cs**
+- [x] **Step 5: Register handlers and policies in Program.cs**
 
 Add `using JiraLite.Api.Features.Projects;` (already added in Task 4). After the existing `builder.Services.AddScoped<IAuthorizationHandler, TeamWorkspaceAdminAuthorizationHandler>();` line, add:
 
@@ -1458,12 +1458,12 @@ ListProjects.MapEndpoint(app);
 GetMyProjectRole.MapEndpoint(app);
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter GetProjectTests`
 Expected: PASS (3 tests).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/Api/Common/Auth/ProjectAuthorization.cs src/Api/Features/Projects src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Projects
@@ -1483,7 +1483,7 @@ git commit -m "feat: add Project-scoped authorization, GetProject, ListProjects,
 - Consumes: `"ProjectManage"` policy from Task 5.
 - Produces: the archived-project write-lock pattern (`ProblemResults.Conflict("https://jiralite.dev/errors/project-archived", ...)`) reused by `CreateBoard` (Task 10) and `CreateSprint` (Task 14).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Projects/EditArchiveProjectTests.cs
@@ -1550,12 +1550,12 @@ public class EditArchiveProjectTests : IClassFixture<JiraLiteApiFactory>, IAsync
 
 Add `using System.Text.Json;` at the top. Note: this test's second assertion (`boardResponse`) will not compile/pass until Task 10 maps `POST /api/projects/{projectId}/boards` — leave that assertion commented out until Task 10, or implement Tasks 6 and 10 together if running strict per-task TDD. For this task, keep only the first two assertions (edit + archive + unarchive) and add the board-blocked assertion back in as part of Task 10's test file instead.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter EditArchiveProjectTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Projects/EditProject.cs
@@ -1687,7 +1687,7 @@ public static class UnarchiveProject
 }
 ```
 
-- [ ] **Step 4: Register endpoints in Program.cs**
+- [x] **Step 4: Register endpoints in Program.cs**
 
 Add `using JiraLite.Api.Features.Projects;` (already present). After `GetMyProjectRole.MapEndpoint(app);`, add:
 
@@ -1697,7 +1697,7 @@ ArchiveProject.MapEndpoint(app);
 UnarchiveProject.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Trim the test to what this task delivers, then run it**
+- [x] **Step 5: Trim the test to what this task delivers, then run it**
 
 Remove the `boardResponse`/`unarchiveResponse` block's board-creation assertion from the test written in Step 1 (it depends on Task 10); keep only:
 
@@ -1727,7 +1727,7 @@ Remove the `boardResponse`/`unarchiveResponse` block's board-creation assertion 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter EditArchiveProjectTests`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Projects/EditProject.cs src/Api/Features/Projects/ArchiveProject.cs src/Api/Features/Projects/UnarchiveProject.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Projects/EditArchiveProjectTests.cs
@@ -1747,7 +1747,7 @@ git commit -m "feat: add EditProject, ArchiveProject, UnarchiveProject"
 - Consumes: `"ProjectWorkspaceAdmin"` policy from Task 5.
 - Produces: nothing consumed by later tasks — this is a terminal operation.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Projects/DeleteProjectTests.cs
@@ -1836,12 +1836,12 @@ public class DeleteProjectTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifet
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter DeleteProjectTests`
 Expected: FAIL — route not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Projects/DeleteProject.cs
@@ -1905,7 +1905,7 @@ public static class DeleteProject
 
 Note: `ExecuteDeleteAsync`/`ExecuteUpdateAsync` (EF Core bulk operations) run each as its own statement against the database inside the explicit transaction — this avoids loading every child row into memory just to delete it, appropriate for a cascading delete that may touch many rows. Comments/Attachments/Labels/Issues are not yet in scope (Phase 4) so are not referenced here; this handler must be revisited in Phase 4 to also cascade those.
 
-- [ ] **Step 4: Register the endpoint in Program.cs**
+- [x] **Step 4: Register the endpoint in Program.cs**
 
 After `UnarchiveProject.MapEndpoint(app);`, add:
 
@@ -1913,12 +1913,12 @@ After `UnarchiveProject.MapEndpoint(app);`, add:
 DeleteProject.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter DeleteProjectTests`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Projects/DeleteProject.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Projects/DeleteProjectTests.cs
@@ -1937,7 +1937,7 @@ git commit -m "feat: add DeleteProject with cascade and ActivityLogEntry detach"
 **Interfaces:**
 - Consumes: `"ProjectView"`, `"ProjectManage"` policies from Task 5.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Projects/ProjectMemberTests.cs
@@ -2001,12 +2001,12 @@ public class ProjectMemberTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifet
 
 Add `using System.Text.Json;` at the top. Note: this test exercises the real `/api/workspaces/{workspaceId}/invitations` + accept-invitation flow already built in Phase 2 — check `src/Api/Features/Workspaces/CreateInvitation.cs` and `AcceptInvitation.cs` for the exact request/response field names and adjust this test's request bodies/routes if they differ from what's assumed here (`email`/`role` on create, `token` on accept, and whether accept is a flat `/api/workspaces/accept-invitation` route or nested — confirm against `Program.cs`'s registered routes before finalizing this test).
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ProjectMemberTests`
 Expected: FAIL — Project member routes not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Projects/ListProjectMembers.cs
@@ -2219,7 +2219,7 @@ public static class RemoveProjectMember
 }
 ```
 
-- [ ] **Step 4: Register endpoints in Program.cs**
+- [x] **Step 4: Register endpoints in Program.cs**
 
 After `DeleteProject.MapEndpoint(app);`, add:
 
@@ -2230,12 +2230,12 @@ ChangeProjectMemberRole.MapEndpoint(app);
 RemoveProjectMember.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ProjectMemberTests`
 Expected: PASS. If the invitation flow's actual request/response shape differs from what Step 1 assumed, fix the test to match `CreateInvitation.cs`/`AcceptInvitation.cs` rather than changing those files.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Projects/ListProjectMembers.cs src/Api/Features/Projects/AddProjectMember.cs src/Api/Features/Projects/ChangeProjectMemberRole.cs src/Api/Features/Projects/RemoveProjectMember.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Projects/ProjectMemberTests.cs
@@ -2253,7 +2253,7 @@ git commit -m "feat: add Project member management endpoints"
 **Interfaces:**
 - Consumes: `ProjectMember` from Task 2.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Workspaces/RemoveMemberCascadeTests.cs
@@ -2312,12 +2312,12 @@ public class RemoveMemberCascadeTests : IClassFixture<JiraLiteApiFactory>, IAsyn
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter RemoveMemberCascadeTests`
 Expected: FAIL — `ProjectMember` row is still present after removal (current `RemoveMember.cs` doesn't touch `ProjectMember`).
 
-- [ ] **Step 3: Retrofit RemoveMember.cs**
+- [x] **Step 3: Retrofit RemoveMember.cs**
 
 In `src/Api/Features/Workspaces/RemoveMember.cs`, after the existing Team-membership cleanup block (`db.TeamMembers.RemoveRange(teamMemberships);`) and before `db.WorkspaceMembers.Remove(member);`, add:
 
@@ -2338,16 +2338,16 @@ Also update the file's leading XML doc comment, replacing the line `/// ProjectM
 /// Cascades to ProjectMember (BR-08) now that Project/ProjectMember exist (Phase 3).
 ```
 
-- [ ] **Step 4: Retrofit LeaveWorkspace.cs identically**
+- [x] **Step 4: Retrofit LeaveWorkspace.cs identically**
 
 In `src/Api/Features/Workspaces/LeaveWorkspace.cs`, after its existing `db.TeamMembers.RemoveRange(teamMemberships);` line and before `db.WorkspaceMembers.Remove(member);`, add the identical block from Step 3 (same variable names — `userId`, `workspaceId`, and `cancellationToken` are already in scope in this handler).
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter RemoveMemberCascadeTests`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Workspaces/RemoveMember.cs src/Api/Features/Workspaces/LeaveWorkspace.cs tests/JiraLite.Api.IntegrationTests/Workspaces/RemoveMemberCascadeTests.cs
@@ -2368,7 +2368,7 @@ git commit -m "fix: cascade ProjectMember removal on Workspace membership loss (
 - Produces: policies `"BoardView"`, `"BoardManage"`, `"BoardContribute"` — consumed by Tasks 11-14.
 - Consumes: `"ProjectView"`/`"ProjectManage"` (existing routes stay project-scoped for list/create).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Boards/BoardTests.cs
@@ -2453,12 +2453,12 @@ public class BoardTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter BoardTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the Board-scoped authorization policies**
+- [x] **Step 3: Write the Board-scoped authorization policies**
 
 ```csharp
 // src/Api/Common/Auth/BoardAuthorization.cs
@@ -2552,7 +2552,7 @@ public class BoardContributeAuthorizationHandler(
 }
 ```
 
-- [ ] **Step 4: Write ListBoards, GetBoard, CreateBoard**
+- [x] **Step 4: Write ListBoards, GetBoard, CreateBoard**
 
 ```csharp
 // src/Api/Features/Boards/ListBoards.cs
@@ -2735,7 +2735,7 @@ public static class CreateBoard
 }
 ```
 
-- [ ] **Step 5: Register handlers, policies, and endpoints in Program.cs**
+- [x] **Step 5: Register handlers, policies, and endpoints in Program.cs**
 
 Add `using JiraLite.Api.Features.Boards;` to the top. After the `ProjectWorkspaceAdminAuthorizationHandler` registration line, add:
 
@@ -2761,12 +2761,12 @@ GetBoard.MapEndpoint(app);
 CreateBoard.MapEndpoint(app);
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter BoardTests`
 Expected: PASS (3 tests). This also retroactively satisfies the board-creation assertion dropped from Task 6's test — optionally add it back to `EditArchiveProjectTests.cs` now, though `BoardTests.Creating_a_board_in_an_archived_project_is_rejected` already covers it.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/Api/Common/Auth/BoardAuthorization.cs src/Api/Features/Boards src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Boards/BoardTests.cs
@@ -2785,7 +2785,7 @@ git commit -m "feat: add Board-scoped authorization, ListBoards, GetBoard, Creat
 **Interfaces:**
 - Consumes: `"BoardManage"` policy from Task 10.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Boards/DeleteBoardTests.cs
@@ -2894,12 +2894,12 @@ public class DeleteBoardTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetim
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter DeleteBoardTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Boards/RenameBoard.cs
@@ -3001,7 +3001,7 @@ public static class DeleteBoard
 }
 ```
 
-- [ ] **Step 4: Register endpoints in Program.cs**
+- [x] **Step 4: Register endpoints in Program.cs**
 
 After `CreateBoard.MapEndpoint(app);`, add:
 
@@ -3010,12 +3010,12 @@ RenameBoard.MapEndpoint(app);
 DeleteBoard.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter DeleteBoardTests`
 Expected: PASS (3 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Boards/RenameBoard.cs src/Api/Features/Boards/DeleteBoard.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Boards/DeleteBoardTests.cs
@@ -3034,7 +3034,7 @@ git commit -m "feat: add RenameBoard and DeleteBoard with last-board and Sprint-
 **Interfaces:**
 - Consumes: `"BoardManage"` policy from Task 10.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Boards/ColumnTests.cs
@@ -3092,21 +3092,50 @@ public class ColumnTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
     public async Task Deleting_the_last_remaining_column_is_rejected()
     {
         var (client, boardId) = await SeedBoardAsync();
-
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
-        var columnIds = await db.BoardColumns.Where(c => c.BoardId == boardId).Select(c => c.Id).ToListAsync();
+        var toDoColumnId = await db.BoardColumns.Where(c => c.BoardId == boardId && c.Name == "To Do").Select(c => c.Id).SingleAsync();
+        var inProgressColumnId = await db.BoardColumns.Where(c => c.BoardId == boardId && c.Name == "In Progress").Select(c => c.Id).SingleAsync();
+        var doneColumnId = await db.BoardColumns.Where(c => c.BoardId == boardId && c.Name == "Done").Select(c => c.Id).SingleAsync();
 
-        // Delete two of the three default columns directly to isolate the "last column" guard.
-        foreach (var columnId in columnIds.Skip(1))
-        {
-            var deleteResponse = await client.DeleteAsync($"/api/boards/{boardId}/columns/{columnId}");
-            Assert.Equal(HttpStatusCode.OK, deleteResponse.StatusCode);
-        }
+        // Give "To Do" both flags first, so deleting "In Progress" and "Done" below doesn't
+        // trip the BR-02 sole-Default/sole-Done guards — this test isolates BR-01 only.
+        await client.PatchAsJsonAsync($"/api/boards/{boardId}/columns/{toDoColumnId}", new { isDoneColumn = true });
 
-        var lastResponse = await client.DeleteAsync($"/api/boards/{boardId}/columns/{columnIds[0]}");
+        var deleteInProgress = await client.DeleteAsync($"/api/boards/{boardId}/columns/{inProgressColumnId}");
+        Assert.Equal(HttpStatusCode.OK, deleteInProgress.StatusCode);
+        var deleteDone = await client.DeleteAsync($"/api/boards/{boardId}/columns/{doneColumnId}");
+        Assert.Equal(HttpStatusCode.OK, deleteDone.StatusCode);
+
+        var lastResponse = await client.DeleteAsync($"/api/boards/{boardId}/columns/{toDoColumnId}");
 
         Assert.Equal(HttpStatusCode.Conflict, lastResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Deleting_the_sole_default_column_without_another_default_is_rejected()
+    {
+        var (client, boardId) = await SeedBoardAsync();
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
+        var toDoColumnId = await db.BoardColumns.Where(c => c.BoardId == boardId && c.Name == "To Do").Select(c => c.Id).SingleAsync();
+
+        var response = await client.DeleteAsync($"/api/boards/{boardId}/columns/{toDoColumnId}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Deleting_the_sole_done_column_without_another_done_is_rejected()
+    {
+        var (client, boardId) = await SeedBoardAsync();
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
+        var doneColumnId = await db.BoardColumns.Where(c => c.BoardId == boardId && c.Name == "Done").Select(c => c.Id).SingleAsync();
+
+        var response = await client.DeleteAsync($"/api/boards/{boardId}/columns/{doneColumnId}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
@@ -3128,12 +3157,12 @@ public class ColumnTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
 
 Add `using System.Text.Json;` and `using System.Linq;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ColumnTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Boards/AddColumn.cs
@@ -3302,8 +3331,9 @@ using Microsoft.EntityFrameworkCore;
 namespace JiraLite.Api.Features.Boards;
 
 /// <summary>
-/// spec/06-boards.md BR-01 (last column on a Board). BR-03 (Issue-presence guard) is deferred to
-/// Phase 4 — no Issue entity exists yet to check against.
+/// spec/06-boards.md BR-01 (last column on a Board) and BR-02 (deleting the sole Default or sole
+/// Done column would leave the Board without one, same invariant EditColumn enforces on unset).
+/// BR-03 (Issue-presence guard) is deferred to Phase 4 — no Issue entity exists yet to check against.
 /// </summary>
 public static class DeleteColumn
 {
@@ -3325,6 +3355,24 @@ public static class DeleteColumn
                     "A Board must retain at least one Column.");
             }
 
+            if (column.IsDefault)
+            {
+                var anotherDefaultExists = await db.BoardColumns.AnyAsync(c => c.BoardId == boardId && c.Id != columnId && c.IsDefault, cancellationToken);
+                if (!anotherDefaultExists)
+                {
+                    return Results.BadRequest(new { detail = "Cannot delete the only default column without another column already marked default." });
+                }
+            }
+
+            if (column.IsDoneColumn)
+            {
+                var anotherDoneExists = await db.BoardColumns.AnyAsync(c => c.BoardId == boardId && c.Id != columnId && c.IsDoneColumn, cancellationToken);
+                if (!anotherDoneExists)
+                {
+                    return Results.BadRequest(new { detail = "Cannot delete the only Done column without another column already marked Done." });
+                }
+            }
+
             db.BoardColumns.Remove(column);
             await db.SaveChangesAsync(cancellationToken);
 
@@ -3339,7 +3387,7 @@ public static class DeleteColumn
 }
 ```
 
-- [ ] **Step 4: Register endpoints in Program.cs**
+- [x] **Step 4: Register endpoints in Program.cs**
 
 After `DeleteBoard.MapEndpoint(app);`, add:
 
@@ -3349,12 +3397,12 @@ EditColumn.MapEndpoint(app);
 DeleteColumn.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ColumnTests`
-Expected: PASS (3 tests).
+Expected: PASS (5 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Boards/AddColumn.cs src/Api/Features/Boards/EditColumn.cs src/Api/Features/Boards/DeleteColumn.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Boards/ColumnTests.cs
@@ -3375,7 +3423,7 @@ git commit -m "feat: add AddColumn, EditColumn, DeleteColumn with BR-01/BR-02 gu
 
 **Design note:** `spec/06-boards.md`'s illustrative reorder request (`{ orderedColumnIds: [...] }`) omits a concurrency token, but `spec/19-api-guidelines.md` §11 requires one for this exact endpoint, and §1 states this document's conventions win over a conflicting illustrative example. Because a bulk reorder touches every column on the Board — each with its own independent `RowVersion` — the request is shaped as a list of `{ columnId, rowVersion }` pairs (order given by list position) rather than a flat id array, so each row's concurrency token can be checked individually.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Boards/ReorderColumnsTests.cs
@@ -3486,12 +3534,12 @@ public class ReorderColumnsTests : IClassFixture<JiraLiteApiFactory>, IAsyncLife
 
 Add `using System.Text.Json;` and `using System.Linq;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ReorderColumnsTests`
 Expected: FAIL — route not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Boards/ReorderColumns.cs
@@ -3583,7 +3631,7 @@ public static class ReorderColumns
 }
 ```
 
-- [ ] **Step 4: Register the endpoint in Program.cs**
+- [x] **Step 4: Register the endpoint in Program.cs**
 
 After `DeleteColumn.MapEndpoint(app);`, add:
 
@@ -3591,12 +3639,12 @@ After `DeleteColumn.MapEndpoint(app);`, add:
 ReorderColumns.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter ReorderColumnsTests`
 Expected: PASS (3 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Boards/ReorderColumns.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Boards/ReorderColumnsTests.cs
@@ -3617,7 +3665,7 @@ git commit -m "feat: add ReorderColumns with per-column RowVersion concurrency"
 - Produces: policies `"SprintView"`, `"SprintContribute"`, `"SprintManage"` — consumed by Tasks 15-16.
 - Consumes: `"BoardContribute"`/`"BoardView"` (Task 10) for the boardId-routed list/create endpoints.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Sprints/SprintLifecycleTests.cs
@@ -3722,12 +3770,12 @@ public class SprintLifecycleTests : IClassFixture<JiraLiteApiFactory>, IAsyncLif
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter SprintLifecycleTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the Sprint-scoped authorization policies**
+- [x] **Step 3: Write the Sprint-scoped authorization policies**
 
 ```csharp
 // src/Api/Common/Auth/SprintAuthorization.cs
@@ -3821,7 +3869,7 @@ public class SprintManageAuthorizationHandler(
 }
 ```
 
-- [ ] **Step 4: Write CreateSprint, ListSprints, GetSprint**
+- [x] **Step 4: Write CreateSprint, ListSprints, GetSprint**
 
 ```csharp
 // src/Api/Features/Sprints/CreateSprint.cs
@@ -3978,7 +4026,7 @@ public static class GetSprint
 }
 ```
 
-- [ ] **Step 5: Register handlers, policies, and endpoints in Program.cs**
+- [x] **Step 5: Register handlers, policies, and endpoints in Program.cs**
 
 Add `using JiraLite.Api.Features.Sprints;` to the top. After the `BoardContributeAuthorizationHandler` registration line, add:
 
@@ -4004,12 +4052,12 @@ ListSprints.MapEndpoint(app);
 GetSprint.MapEndpoint(app);
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [x] **Step 6: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter SprintLifecycleTests`
 Expected: PASS (3 tests).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/Api/Common/Auth/SprintAuthorization.cs src/Api/Features/Sprints src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Sprints/SprintLifecycleTests.cs
@@ -4028,7 +4076,7 @@ git commit -m "feat: add Sprint-scoped authorization, CreateSprint, ListSprints,
 **Interfaces:**
 - Consumes: `"SprintContribute"` policy from Task 14; `IX_Sprint_BoardId_ActiveOnly` filtered unique index from Task 2.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Sprints/StartSprintTests.cs
@@ -4130,12 +4178,12 @@ public class StartSprintTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetim
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter StartSprintTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Sprints/EditSprint.cs
@@ -4269,7 +4317,7 @@ public static class StartSprint
 }
 ```
 
-- [ ] **Step 4: Register endpoints in Program.cs**
+- [x] **Step 4: Register endpoints in Program.cs**
 
 After `GetSprint.MapEndpoint(app);`, add:
 
@@ -4278,12 +4326,12 @@ EditSprint.MapEndpoint(app);
 StartSprint.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter StartSprintTests`
 Expected: PASS (3 tests). The second test's 409 comes from the pre-check (no real concurrency needed to trigger it in a single-threaded test) — the filtered index is the backstop for genuinely concurrent calls, not exercised by this sequential test.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Sprints/EditSprint.cs src/Api/Features/Sprints/StartSprint.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Sprints/StartSprintTests.cs
@@ -4304,7 +4352,7 @@ git commit -m "feat: add EditSprint and StartSprint with single-active-sprint gu
 
 **Deferral reminder:** `CompleteSprint` here only performs the status transition (`Active → Completed`, sets `CompletedAtUtc`). The BR-05 carry-forward-incomplete-Issues behavior is deferred to Phase 4 (see Task 18) since it requires querying `Issue`, which doesn't exist yet.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Sprints/CompleteDeleteSprintTests.cs
@@ -4401,12 +4449,12 @@ public class CompleteDeleteSprintTests : IClassFixture<JiraLiteApiFactory>, IAsy
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter CompleteDeleteSprintTests`
 Expected: FAIL — routes not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Sprints/CompleteSprint.cs
@@ -4501,7 +4549,7 @@ public static class DeleteSprint
 }
 ```
 
-- [ ] **Step 4: Register endpoints in Program.cs**
+- [x] **Step 4: Register endpoints in Program.cs**
 
 After `StartSprint.MapEndpoint(app);`, add:
 
@@ -4510,12 +4558,12 @@ CompleteSprint.MapEndpoint(app);
 DeleteSprint.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter CompleteDeleteSprintTests`
 Expected: PASS (3 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Sprints/CompleteSprint.cs src/Api/Features/Sprints/DeleteSprint.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Sprints/CompleteDeleteSprintTests.cs
@@ -4534,7 +4582,7 @@ git commit -m "feat: add CompleteSprint (status transition) and DeleteSprint"
 **Interfaces:**
 - Consumes: `CursorPagination` from Task 3, `ActivityLogEntry` from Task 2.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Users/GetMyActivityTests.cs
@@ -4625,12 +4673,12 @@ public class GetMyActivityTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifet
 
 Add `using System.Text.Json;` and `using System.Linq;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter GetMyActivityTests`
 Expected: FAIL — route not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Users/GetMyActivity.cs
@@ -4688,7 +4736,7 @@ public static class GetMyActivity
 }
 ```
 
-- [ ] **Step 4: Register the endpoint in Program.cs**
+- [x] **Step 4: Register the endpoint in Program.cs**
 
 After `DeactivateAccount.MapEndpoint(app);`, add:
 
@@ -4696,12 +4744,12 @@ After `DeactivateAccount.MapEndpoint(app);`, add:
 GetMyActivity.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter GetMyActivityTests`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Users/GetMyActivity.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Users/GetMyActivityTests.cs
@@ -4717,7 +4765,7 @@ git commit -m "feat: add GetMyActivity with cursor pagination (deferred from Pha
 
 **Interfaces:** None — documentation only.
 
-- [ ] **Step 1: Add a deferral note to the Phase 4 section**
+- [x] **Step 1: Add a deferral note to the Phase 4 section**
 
 In `spec/21-roadmap.md`, find the Phase 4 section (`## 6. Phase 4 — Work Tracking`). Immediately after its **Goals:** line and before **Deliverables:**, add:
 
@@ -4728,11 +4776,11 @@ In `spec/21-roadmap.md`, find the Phase 4 section (`## 6. Phase 4 — Work Track
 - **Board/Column delete Issue-presence guards** ([06-boards.md](06-boards.md) BR-03, BR-05): Phase 3's `DeleteBoard`/`DeleteColumn` only enforce the structural guards (last-Board, last-Column) and the Sprint-reference guard (BR-09); the Issue-presence checks must be added to both handlers once `Issue` exists.
 ```
 
-- [ ] **Step 2: Verify the edit renders correctly**
+- [x] **Step 2: Verify the edit renders correctly**
 
 Run: view the file (or `git diff spec/21-roadmap.md`) and confirm the note reads correctly inline with the rest of the Phase 4 section, doesn't break any Markdown table below it, and the phrasing matches the tone of the existing Phase 1 deferral note.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add spec/21-roadmap.md
@@ -4745,21 +4793,21 @@ git commit -m "docs: document Phase 3->4 deferrals (Sprint carry-forward, board/
 
 **Files:** None created — verification only.
 
-- [ ] **Step 1: Build the whole solution**
+- [x] **Step 1: Build the whole solution**
 
 Run: `dotnet build`
 Expected: Solution builds with 0 errors/warnings (both `src/Api` and `tests/JiraLite.Api.IntegrationTests`).
 
-- [ ] **Step 2: Run the full integration test suite**
+- [x] **Step 2: Run the full integration test suite**
 
 Run: `dotnet test`
 Expected: All tests across every task in this plan pass (HealthCheck, schema, pagination, Projects x5, Workspaces cascade, Boards x3, Sprints x3, Users activity — roughly 30+ tests total).
 
-- [ ] **Step 3: Manual Swagger smoke pass per spec/21-roadmap.md Phase 3 Definition of Done**
+- [x] **Step 3: Manual Swagger smoke pass per spec/21-roadmap.md Phase 3 Definition of Done**
 
 Run: `docker compose up` (or `dotnet run --project src/Api`), open `/swagger`, and walk through: create a Project (verify default Board + 3 columns exist), archive it (verify write-lock on Board/Sprint creation), unarchive, add/change/remove a Project member, create a second Scrum Board, create and start a Sprint (verify a second Sprint on the same Board can't start while the first is Active), complete it, reorder columns on the default Board, and hit `GET /api/users/me/activity` to see it return an empty page. Confirm each matches the acceptance criteria in `spec/05-projects.md` §15, `spec/06-boards.md` §15, `spec/08-sprints.md` §15, and `spec/16-rbac.md` §15.
 
-- [ ] **Step 4: Fix any regressions found, then commit**
+- [x] **Step 4: Fix any regressions found, then commit**
 
 If Step 2 or Step 3 surfaces a bug, fix it in the relevant task's file (not a new bolt-on file), re-run the affected test(s), and commit the fix with a message referencing which behavior was broken. If nothing is found, no commit is needed for this task.
 

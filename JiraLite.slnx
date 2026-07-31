@@ -3,4 +3,8 @@
   <Folder Name="/src/Api/">
     <Project Path="src/Api/JiraLite.Api.csproj" />
   </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/JiraLite.Api.IntegrationTests/">
+    <Project Path="tests/JiraLite.Api.IntegrationTests/JiraLite.Api.IntegrationTests.csproj" />
+  </Folder>
 </Solution>

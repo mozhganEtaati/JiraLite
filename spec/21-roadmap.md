@@ -61,6 +61,11 @@ Eight sequential phases, each building only on entities and endpoints delivered 
 
 **Goals:** The core value proposition: Issues (with hierarchy), backlog ranking, Comments, Attachments, Labels.
 
+**Note on carry-over from Phase 3:** Three pieces of `spec/08-sprints.md` and `spec/06-boards.md` behavior could not be built in Phase 3 because they require `Issue`, which doesn't exist until this phase — mirroring the same forward-reference logic already documented for `ActivityLogEntry` in Phase 1's note. All three must be added here, alongside `Issue`:
+- **Sprint completion carry-forward** ([08-sprints.md](08-sprints.md) BR-05): Phase 3's `CompleteSprint` only performs the `Active → Completed` status transition; the "move incomplete Issues to the Product Backlog or another Sprint" logic must be retrofitted once `Issue` exists.
+- **`POST/DELETE /sprints/{sprintId}/issues`** and **`GET /boards/{boardId}/issues`** ([08-sprints.md](08-sprints.md) §9, [06-boards.md](06-boards.md) §9): not implemented in Phase 3 at all — both require querying/mutating `Issue`.
+- **Board/Column delete Issue-presence guards** ([06-boards.md](06-boards.md) BR-03, BR-05): Phase 3's `DeleteBoard`/`DeleteColumn` only enforce the structural guards (last-Board, last-Column) and the Sprint-reference guard (BR-09); the Issue-presence checks must be added to both handlers once `Issue` exists.
+
 **Deliverables:** `Issue`, `Comment`, `Attachment`, `Label`, `IssueLabel` entities/migrations; all endpoints in [07-backlog.md](07-backlog.md), [09-issues.md](09-issues.md), [10-comments.md](10-comments.md), [11-attachments.md](11-attachments.md), [12-labels.md](12-labels.md); `LocalDiskFileStorage` implementation of `IFileStorage`.
 
 **Dependencies:** Phase 3 (every Issue requires an existing `BoardColumnId`; Sprint assignment requires Sprints to exist).

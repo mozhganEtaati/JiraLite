@@ -15,3 +15,6 @@ docker-compose.override.yml
 ## Secrets / local config
 appsettings.*.local.json
 .env
+
+## Git worktrees (nested checkouts, never real repo content)
+.claude/worktrees/
