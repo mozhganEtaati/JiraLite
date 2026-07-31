@@ -1747,7 +1747,7 @@ git commit -m "feat: add EditProject, ArchiveProject, UnarchiveProject"
 - Consumes: `"ProjectWorkspaceAdmin"` policy from Task 5.
 - Produces: nothing consumed by later tasks — this is a terminal operation.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```csharp
 // tests/JiraLite.Api.IntegrationTests/Projects/DeleteProjectTests.cs
@@ -1836,12 +1836,12 @@ public class DeleteProjectTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifet
 
 Add `using System.Text.Json;` at the top.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter DeleteProjectTests`
 Expected: FAIL — route not mapped.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```csharp
 // src/Api/Features/Projects/DeleteProject.cs
@@ -1905,7 +1905,7 @@ public static class DeleteProject
 
 Note: `ExecuteDeleteAsync`/`ExecuteUpdateAsync` (EF Core bulk operations) run each as its own statement against the database inside the explicit transaction — this avoids loading every child row into memory just to delete it, appropriate for a cascading delete that may touch many rows. Comments/Attachments/Labels/Issues are not yet in scope (Phase 4) so are not referenced here; this handler must be revisited in Phase 4 to also cascade those.
 
-- [ ] **Step 4: Register the endpoint in Program.cs**
+- [x] **Step 4: Register the endpoint in Program.cs**
 
 After `UnarchiveProject.MapEndpoint(app);`, add:
 
@@ -1913,12 +1913,12 @@ After `UnarchiveProject.MapEndpoint(app);`, add:
 DeleteProject.MapEndpoint(app);
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `dotnet test tests/JiraLite.Api.IntegrationTests --filter DeleteProjectTests`
 Expected: PASS (2 tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/Api/Features/Projects/DeleteProject.cs src/Api/Program.cs tests/JiraLite.Api.IntegrationTests/Projects/DeleteProjectTests.cs
