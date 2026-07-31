@@ -233,6 +233,7 @@ GetNotificationPreferences.MapEndpoint(app);
 UpdateNotificationPreferences.MapEndpoint(app);
 GetPublicProfile.MapEndpoint(app);
 DeactivateAccount.MapEndpoint(app);
+GetMyActivity.MapEndpoint(app);
 
 CreateOrganization.MapEndpoint(app);
 ListMyOrganizations.MapEndpoint(app);
