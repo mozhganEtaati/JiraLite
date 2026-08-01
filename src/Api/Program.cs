@@ -10,10 +10,13 @@ using JiraLite.Api.Common.Infrastructure.Email;
 using JiraLite.Api.Common.Infrastructure.FileStorage;
 using JiraLite.Api.Common.Infrastructure.Persistence;
 using JiraLite.Api.Common.Notifications;
+using JiraLite.Api.Features.Admin;
 using JiraLite.Api.Features.Auth;
 using JiraLite.Api.Features.Backlog;
 using JiraLite.Api.Features.Attachments;
 using JiraLite.Api.Features.Boards;
+using JiraLite.Api.Features.Calendar;
+using JiraLite.Api.Features.Dashboard;
 using JiraLite.Api.Features.Comments;
 using JiraLite.Api.Features.Issues;
 using JiraLite.Api.Features.Labels;
@@ -380,6 +383,16 @@ ListNotifications.MapEndpoint(app);
 GetUnreadCount.MapEndpoint(app);
 MarkNotificationRead.MapEndpoint(app);
 MarkAllNotificationsRead.MapEndpoint(app);
+
+GetMyTasks.MapEndpoint(app);
+GetMyProjects.MapEndpoint(app);
+GetRecentActivity.MapEndpoint(app);
+GetDueDates.MapEndpoint(app);
+GetSprintTimeline.MapEndpoint(app);
+GetAdminOverview.MapEndpoint(app);
+ListAdminUsers.MapEndpoint(app);
+ListAdminProjects.MapEndpoint(app);
+GetRoleCatalog.MapEndpoint(app);
 
 app.Run();
 
