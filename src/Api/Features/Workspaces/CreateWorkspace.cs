@@ -63,6 +63,20 @@ public static class CreateWorkspace
                 CreatedAtUtc = now
             });
 
+            // spec/02-users.md BR-05/BR-06 — a representative Activity entry for Phase 2.
+            db.ActivityLogEntries.Add(new ActivityLogEntry
+            {
+                Id = Guid.NewGuid(),
+                ActorUserId = userId,
+                WorkspaceId = workspace.Id,
+                ProjectId = null,
+                EntityType = "Workspace",
+                EntityId = workspace.Id,
+                Action = "Created",
+                Summary = $"created Workspace {workspace.Name}",
+                OccurredAtUtc = now
+            });
+
             await db.SaveChangesAsync(cancellationToken);
 
             return Results.Created(

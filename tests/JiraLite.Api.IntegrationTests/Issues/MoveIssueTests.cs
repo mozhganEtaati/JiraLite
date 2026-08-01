@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using JiraLite.Api.Common.Domain;
 using JiraLite.Api.Common.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -124,6 +125,68 @@ public class MoveIssueTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
         var verifyDb = verifyScope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
         var subtask = await verifyDb.Issues.SingleAsync(i => i.Id == subtaskId);
         Assert.Null(subtask.SprintId);
+    }
+
+    [Fact]
+    public async Task Moving_an_issue_notifies_the_assignee_and_reporter_but_not_the_mover()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+        var seeded = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+        var issueId = await TestDataHelper.CreateIssueAsync(client, seeded.ProjectId);
+        var developer = await TestDataHelper.AddProjectMemberAsync(
+            client, _factory, seeded.WorkspaceId, seeded.ProjectId, admin.AccessToken, "Developer");
+
+        client.DefaultRequestHeaders.Authorization = new("Bearer", admin.AccessToken);
+        await client.PatchAsJsonAsync($"/api/issues/{issueId}", new { assigneeUserId = developer.UserId });
+
+        var getResponse = await client.GetAsync($"/api/issues/{issueId}");
+        var issueBody = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var rowVersion = issueBody.GetProperty("rowVersion").GetString()!;
+
+        var response = await client.PatchAsJsonAsync(
+            $"/api/issues/{issueId}/move", new { boardColumnId = seeded.DoneColumnId, rowVersion });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
+
+        // admin is both the mover and the Issue's reporter (BR-01 self-exclusion applies to both roles).
+        var adminNotifications = await db.Notifications.Where(n => n.RecipientUserId == admin.UserId).ToListAsync();
+        Assert.Empty(adminNotifications);
+
+        var developerNotifications = await db.Notifications.Where(n => n.RecipientUserId == developer.UserId).ToListAsync();
+        Assert.Single(developerNotifications);
+        Assert.Equal(NotificationType.IssueStatusChanged, developerNotifications[0].Type);
+    }
+
+    [Fact]
+    public async Task Moving_to_the_same_column_does_not_notify()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+        var seeded = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+        var issueId = await TestDataHelper.CreateIssueAsync(client, seeded.ProjectId);
+        var developer = await TestDataHelper.AddProjectMemberAsync(
+            client, _factory, seeded.WorkspaceId, seeded.ProjectId, admin.AccessToken, "Developer");
+
+        client.DefaultRequestHeaders.Authorization = new("Bearer", admin.AccessToken);
+        await client.PatchAsJsonAsync($"/api/issues/{issueId}", new { assigneeUserId = developer.UserId });
+
+        var getResponse = await client.GetAsync($"/api/issues/{issueId}");
+        var issueBody = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var rowVersion = issueBody.GetProperty("rowVersion").GetString()!;
+
+        var response = await client.PatchAsJsonAsync(
+            $"/api/issues/{issueId}/move", new { boardColumnId = seeded.DefaultColumnId, rowVersion });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
+        var developerNotifications = await db.Notifications.Where(n => n.RecipientUserId == developer.UserId).ToListAsync();
+        Assert.Empty(developerNotifications);
     }
 
     [Fact]

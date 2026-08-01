@@ -9,6 +9,7 @@ using JiraLite.Api.Common.Infrastructure.BackgroundJobs;
 using JiraLite.Api.Common.Infrastructure.Email;
 using JiraLite.Api.Common.Infrastructure.FileStorage;
 using JiraLite.Api.Common.Infrastructure.Persistence;
+using JiraLite.Api.Common.Notifications;
 using JiraLite.Api.Features.Auth;
 using JiraLite.Api.Features.Backlog;
 using JiraLite.Api.Features.Attachments;
@@ -82,6 +83,7 @@ builder.Services.AddOptions<AttachmentOptions>()
 builder.Services.AddOptions<EmailOptions>()
     .Bind(builder.Configuration.GetSection(EmailOptions.SectionName));
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+builder.Services.AddScoped<NotificationDispatcher>();
 
 // ---- Workspace invitation config (spec/03-workspaces.md BR-07) ----
 builder.Services.AddOptions<InvitationOptions>()

@@ -4,6 +4,7 @@ using JiraLite.Api.Common.Auth;
 using JiraLite.Api.Common.Behaviors;
 using JiraLite.Api.Common.Domain;
 using JiraLite.Api.Common.Infrastructure.Persistence;
+using JiraLite.Api.Common.Notifications;
 using Microsoft.EntityFrameworkCore;
 
 namespace JiraLite.Api.Features.Issues;
@@ -36,6 +37,7 @@ public static class MoveIssue
             Request request,
             ClaimsPrincipal caller,
             JiraLiteDbContext db,
+            NotificationDispatcher notificationDispatcher,
             CancellationToken cancellationToken)
         {
             var issue = await db.Issues.SingleOrDefaultAsync(i => i.Id == issueId, cancellationToken);
@@ -65,8 +67,11 @@ public static class MoveIssue
 
             db.Entry(issue).Property(i => i.RowVersion).OriginalValue = originalRowVersion;
 
+            var previousColumnId = issue.BoardColumnId;
+            var actorUserId = caller.GetUserId();
+
             issue.BoardColumnId = targetColumn.Column.Id;
-            issue.UpdatedByUserId = caller.GetUserId();
+            issue.UpdatedByUserId = actorUserId;
             issue.UpdatedAtUtc = DateTime.UtcNow;
 
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -77,6 +82,47 @@ public static class MoveIssue
                 await db.Issues
                     .Where(i => i.ParentIssueId == issue.Id)
                     .ExecuteUpdateAsync(setters => setters.SetProperty(i => i.SprintId, (Guid?)null), cancellationToken);
+            }
+
+            // spec/13-notifications.md FR-02: assignee and reporter, excluding whoever moved it.
+            if (previousColumnId != issue.BoardColumnId)
+            {
+                var recipients = new HashSet<Guid> { issue.ReporterUserId };
+                if (issue.AssigneeUserId is not null)
+                {
+                    recipients.Add(issue.AssigneeUserId.Value);
+                }
+
+                foreach (var recipientUserId in recipients)
+                {
+                    await notificationDispatcher.NotifyAsync(
+                        recipientUserId,
+                        actorUserId,
+                        NotificationType.IssueStatusChanged,
+                        $"{issue.Key} moved to {targetColumn.Column.Name}",
+                        "Issue",
+                        issue.Id,
+                        cancellationToken);
+                }
+
+                // spec/02-users.md BR-05/BR-06 — a representative Activity entry for Phase 4 (named
+                // explicitly as an example handler in BR-05).
+                var workspaceId = await db.Projects
+                    .Where(p => p.Id == issue.ProjectId)
+                    .Select(p => p.WorkspaceId)
+                    .SingleAsync(cancellationToken);
+                db.ActivityLogEntries.Add(new ActivityLogEntry
+                {
+                    Id = Guid.NewGuid(),
+                    ActorUserId = actorUserId,
+                    WorkspaceId = workspaceId,
+                    ProjectId = issue.ProjectId,
+                    EntityType = "Issue",
+                    EntityId = issue.Id,
+                    Action = "StatusChanged",
+                    Summary = $"moved Issue {issue.Key} to {targetColumn.Column.Name}",
+                    OccurredAtUtc = issue.UpdatedAtUtc
+                });
             }
 
             try

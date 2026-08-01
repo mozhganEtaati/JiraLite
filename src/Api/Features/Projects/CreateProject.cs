@@ -99,6 +99,20 @@ public static class CreateProject
                 new BoardColumn { Id = Guid.NewGuid(), BoardId = board.Id, Name = "In Progress", DisplayOrder = 1, IsDefault = false, IsDoneColumn = false },
                 new BoardColumn { Id = Guid.NewGuid(), BoardId = board.Id, Name = "Done", DisplayOrder = 2, IsDefault = false, IsDoneColumn = true });
 
+            // spec/02-users.md BR-05/BR-06 — a representative Activity entry for Phase 3.
+            db.ActivityLogEntries.Add(new ActivityLogEntry
+            {
+                Id = Guid.NewGuid(),
+                ActorUserId = userId,
+                WorkspaceId = workspaceId,
+                ProjectId = project.Id,
+                EntityType = "Project",
+                EntityId = project.Id,
+                Action = "Created",
+                Summary = $"created Project {project.Key}",
+                OccurredAtUtc = now
+            });
+
             await db.SaveChangesAsync(cancellationToken);
 
             return Results.Created(

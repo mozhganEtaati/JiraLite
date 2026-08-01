@@ -81,4 +81,24 @@ public class GetMyActivityTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifet
         Assert.Equal("did thing 0", secondItems[0].GetProperty("summary").GetString());
         Assert.False(secondPage.GetProperty("pageInfo").GetProperty("hasNextPage").GetBoolean());
     }
+
+    [Fact]
+    public async Task Creating_a_workspace_project_issue_and_comment_each_write_a_real_activity_entry()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+        var seeded = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+        var issueId = await TestDataHelper.CreateIssueAsync(client, seeded.ProjectId);
+        await client.PostAsJsonAsync($"/api/issues/{issueId}/comments", new { body = "First comment" });
+
+        client.DefaultRequestHeaders.Authorization = new("Bearer", admin.AccessToken);
+        var response = await client.GetAsync("/api/users/me/activity?limit=100");
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var items = body.GetProperty("items").EnumerateArray().ToList();
+
+        Assert.Contains(items, i => i.GetProperty("entityType").GetString() == "Workspace" && i.GetProperty("action").GetString() == "Created");
+        Assert.Contains(items, i => i.GetProperty("entityType").GetString() == "Project" && i.GetProperty("action").GetString() == "Created");
+        Assert.Contains(items, i => i.GetProperty("entityType").GetString() == "Issue" && i.GetProperty("action").GetString() == "Created" && i.GetProperty("entityId").GetGuid() == issueId);
+        Assert.Contains(items, i => i.GetProperty("entityType").GetString() == "Issue" && i.GetProperty("action").GetString() == "Commented" && i.GetProperty("entityId").GetGuid() == issueId);
+    }
 }

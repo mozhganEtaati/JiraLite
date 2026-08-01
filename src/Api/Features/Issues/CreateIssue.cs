@@ -180,6 +180,22 @@ public static class CreateIssue
                 }
             }
 
+            // spec/02-users.md BR-05/BR-06 — a representative Activity entry for Phase 4 (named
+            // explicitly as an example handler in BR-05).
+            db.ActivityLogEntries.Add(new ActivityLogEntry
+            {
+                Id = Guid.NewGuid(),
+                ActorUserId = userId,
+                WorkspaceId = project.WorkspaceId,
+                ProjectId = projectId,
+                EntityType = "Issue",
+                EntityId = issue.Id,
+                Action = "Created",
+                Summary = $"created Issue {issue.Key}",
+                OccurredAtUtc = now
+            });
+            await db.SaveChangesAsync(cancellationToken);
+
             var reporter = (await db.GetUserSummaryAsync(userId, cancellationToken))!;
             var assignee = request.AssigneeUserId is null ? null : await db.GetUserSummaryAsync(request.AssigneeUserId.Value, cancellationToken);
 

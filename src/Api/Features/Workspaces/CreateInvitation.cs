@@ -1,9 +1,11 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using FluentValidation;
+using Hangfire;
 using JiraLite.Api.Common.Auth;
 using JiraLite.Api.Common.Behaviors;
 using JiraLite.Api.Common.Domain;
+using JiraLite.Api.Common.Infrastructure.BackgroundJobs;
 using JiraLite.Api.Common.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -35,6 +37,7 @@ public static class CreateInvitation
             ClaimsPrincipal caller,
             JiraLiteDbContext db,
             IOptions<InvitationOptions> invitationOptions,
+            IBackgroundJobClient backgroundJobClient,
             CancellationToken cancellationToken)
         {
             var workspace = await db.Workspaces.SingleOrDefaultAsync(w => w.Id == workspaceId, cancellationToken);
@@ -89,7 +92,14 @@ public static class CreateInvitation
             db.Invitations.Add(invitation);
             await db.SaveChangesAsync(cancellationToken);
 
-            // TODO(Phase 5, T040): dispatch the invitation email via Hangfire once notifications exist.
+            // spec/13-notifications.md BR-06: sent directly to the invitee's email, no Notification
+            // row, since the invitee may not yet have a User account.
+            backgroundJobClient.Enqueue<SendEmailJob>(job => job.Execute(
+                invitation.Email,
+                $"You've been invited to join {workspace.Name} on JiraLite",
+                $"You've been invited to join the \"{workspace.Name}\" Workspace as a {invitation.Role}. " +
+                $"Log in to JiraLite and accept using invitation token: {invitation.Token}",
+                CancellationToken.None));
 
             return Results.Created(
                 $"/api/workspaces/{workspaceId}/invitations",

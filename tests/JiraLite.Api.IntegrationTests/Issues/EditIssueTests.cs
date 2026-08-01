@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using JiraLite.Api.Common.Domain;
 using JiraLite.Api.Common.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -101,6 +103,55 @@ public class EditIssueTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal(developer.UserId, body.GetProperty("reporterUserId").GetGuid());
+    }
+
+    [Fact]
+    public async Task Assigning_an_issue_notifies_the_new_assignee_but_not_the_actor()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+        var seeded = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+        var issueId = await TestDataHelper.CreateIssueAsync(client, seeded.ProjectId);
+        var developer = await TestDataHelper.AddProjectMemberAsync(
+            client, _factory, seeded.WorkspaceId, seeded.ProjectId, admin.AccessToken, "Developer");
+
+        client.DefaultRequestHeaders.Authorization = new("Bearer", admin.AccessToken);
+        var response = await client.PatchAsJsonAsync($"/api/issues/{issueId}", new { assigneeUserId = developer.UserId });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
+        var developerNotifications = await db.Notifications.Where(n => n.RecipientUserId == developer.UserId).ToListAsync();
+        Assert.Single(developerNotifications);
+        Assert.Equal(NotificationType.IssueAssigned, developerNotifications[0].Type);
+        Assert.Equal("Issue", developerNotifications[0].EntityType);
+        Assert.Equal(issueId, developerNotifications[0].EntityId);
+
+        var adminNotifications = await db.Notifications.Where(n => n.RecipientUserId == admin.UserId).ToListAsync();
+        Assert.Empty(adminNotifications);
+    }
+
+    [Fact]
+    public async Task Reassigning_to_the_same_assignee_does_not_notify_again()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+        var seeded = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+        var issueId = await TestDataHelper.CreateIssueAsync(client, seeded.ProjectId);
+        var developer = await TestDataHelper.AddProjectMemberAsync(
+            client, _factory, seeded.WorkspaceId, seeded.ProjectId, admin.AccessToken, "Developer");
+
+        client.DefaultRequestHeaders.Authorization = new("Bearer", admin.AccessToken);
+        await client.PatchAsJsonAsync($"/api/issues/{issueId}", new { assigneeUserId = developer.UserId });
+        var response = await client.PatchAsJsonAsync($"/api/issues/{issueId}", new { assigneeUserId = developer.UserId, title = "Renamed" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
+        var developerNotifications = await db.Notifications.Where(n => n.RecipientUserId == developer.UserId).ToListAsync();
+        Assert.Single(developerNotifications);
     }
 
     [Fact]

@@ -91,8 +91,24 @@ public static class EditIssue
             if (request.DueDateUtc is not null) issue.DueDateUtc = request.DueDateUtc;
             if (request.Estimate is not null) issue.Estimate = request.Estimate;
 
-            issue.UpdatedByUserId = httpContext.User.GetUserId();
+            var actorUserId = httpContext.User.GetUserId();
+            issue.UpdatedByUserId = actorUserId;
             issue.UpdatedAtUtc = DateTime.UtcNow;
+
+            // spec/13-notifications.md FR-01/BR-03: only when the assignee actually changes to a
+            // different, non-null user — not on every edit.
+            if (issue.AssigneeUserId is not null && issue.AssigneeUserId != previousAssigneeUserId)
+            {
+                await notificationDispatcher.NotifyAsync(
+                    issue.AssigneeUserId.Value,
+                    actorUserId,
+                    NotificationType.IssueAssigned,
+                    $"You were assigned to {issue.Key}",
+                    "Issue",
+                    issue.Id,
+                    cancellationToken);
+            }
+
             await db.SaveChangesAsync(cancellationToken);
 
             var assignee = issue.AssigneeUserId is null ? null : await db.GetUserSummaryAsync(issue.AssigneeUserId.Value, cancellationToken);
