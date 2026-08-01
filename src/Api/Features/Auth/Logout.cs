@@ -2,6 +2,8 @@ using FluentValidation;
 using JiraLite.Api.Common.Auth;
 using JiraLite.Api.Common.Behaviors;
 using JiraLite.Api.Common.Infrastructure.Persistence;
+using JiraLite.Api.Common.Infrastructure.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace JiraLite.Api.Features.Auth;
@@ -59,5 +61,6 @@ public static class Logout
         app.MapPost("/api/auth/logout", Handler.Handle)
             .WithValidation<Request>()
             .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingSetup.AuthPolicyName)
             .WithTags("Auth");
 }

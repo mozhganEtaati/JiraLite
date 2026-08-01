@@ -9,6 +9,7 @@ using JiraLite.Api.Common.Infrastructure.BackgroundJobs;
 using JiraLite.Api.Common.Infrastructure.Email;
 using JiraLite.Api.Common.Infrastructure.FileStorage;
 using JiraLite.Api.Common.Infrastructure.Persistence;
+using JiraLite.Api.Common.Infrastructure.RateLimiting;
 using JiraLite.Api.Common.Notifications;
 using JiraLite.Api.Features.Admin;
 using JiraLite.Api.Features.Auth;
@@ -104,6 +105,9 @@ builder.Services.AddScoped<NotificationDispatcher>();
 // ---- Workspace invitation config (spec/03-workspaces.md BR-07) ----
 builder.Services.AddOptions<InvitationOptions>()
     .Bind(builder.Configuration.GetSection(InvitationOptions.SectionName));
+
+// ---- Rate limiting (spec/19-api-guidelines.md §13, spec/01-authentication.md NFR-04) ----
+builder.Services.AddJiraLiteRateLimiting(builder.Configuration);
 
 // ---- Problem Details (spec/19-api-guidelines.md §9) ----
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -265,6 +269,12 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseAuthentication();
+
+// After UseAuthentication so the baseline limiter can partition by the caller's user id
+// rather than falling back to their IP, and before UseAuthorization so a flood of requests
+// is shed before it reaches the database-backed authorization handlers.
+app.UseRateLimiter();
+
 app.UseAuthorization();
 
 // Dashboard is unauthenticated for now — no User/role system exists until Phase 1-3.

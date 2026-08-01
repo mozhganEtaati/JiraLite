@@ -3,6 +3,8 @@ using JiraLite.Api.Common.Auth;
 using JiraLite.Api.Common.Behaviors;
 using JiraLite.Api.Common.Domain;
 using JiraLite.Api.Common.Infrastructure.Persistence;
+using JiraLite.Api.Common.Infrastructure.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace JiraLite.Api.Features.Auth;
@@ -100,5 +102,6 @@ public static class Refresh
         app.MapPost("/api/auth/refresh", Handler.Handle)
             .WithValidation<Request>()
             .AllowAnonymous()
+            .RequireRateLimiting(RateLimitingSetup.AuthPolicyName)
             .WithTags("Auth");
 }
