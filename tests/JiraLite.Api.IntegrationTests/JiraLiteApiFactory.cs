@@ -1,10 +1,13 @@
+using JiraLite.Api.Common.Infrastructure.Email;
 using JiraLite.Api.Common.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.MsSql;
 using Xunit;
 
@@ -55,6 +58,15 @@ public class JiraLiteApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
                 ["Jwt:SigningKey"] = "integration-test-signing-key-not-for-production-1234567890",
                 ["FileStorage:RootPath"] = Path.Combine(Path.GetTempPath(), "jiralite-tests", Guid.NewGuid().ToString())
             });
+        });
+
+        // Runs after the app's own registrations, so this replacement wins. Keeps the real
+        // dispatcher -> Hangfire enqueue -> job execution path under test while stopping the job
+        // from actually dialling SMTP. See NoOpEmailSender.
+        builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<IEmailSender>();
+            services.AddScoped<IEmailSender, NoOpEmailSender>();
         });
     }
 
