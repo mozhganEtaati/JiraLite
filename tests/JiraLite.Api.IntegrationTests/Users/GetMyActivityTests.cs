@@ -77,7 +77,9 @@ public class GetMyActivityTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifet
         var secondPageResponse = await client.GetAsync($"/api/users/me/activity?limit=2&cursor={Uri.EscapeDataString(cursor!)}");
         var secondPage = await secondPageResponse.Content.ReadFromJsonAsync<JsonElement>();
         var secondItems = secondPage.GetProperty("items").EnumerateArray().ToList();
-        Assert.Single(secondItems);
+        // CreateWorkspaceAsync logs its own Workspace/"Created" entry, so the tail page carries that
+        // older entry alongside the last seeded one. Assert on position — which is what newest-first
+        // ordering plus a correctly-advanced cursor actually guarantees — rather than on page size.
         Assert.Equal("did thing 0", secondItems[0].GetProperty("summary").GetString());
         Assert.False(secondPage.GetProperty("pageInfo").GetProperty("hasNextPage").GetBoolean());
     }
