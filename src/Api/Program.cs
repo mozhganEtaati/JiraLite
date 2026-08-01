@@ -10,10 +10,13 @@ using JiraLite.Api.Common.Infrastructure.Email;
 using JiraLite.Api.Common.Infrastructure.FileStorage;
 using JiraLite.Api.Common.Infrastructure.Persistence;
 using JiraLite.Api.Common.Notifications;
+using JiraLite.Api.Features.Admin;
 using JiraLite.Api.Features.Auth;
 using JiraLite.Api.Features.Backlog;
 using JiraLite.Api.Features.Attachments;
 using JiraLite.Api.Features.Boards;
+using JiraLite.Api.Features.Calendar;
+using JiraLite.Api.Features.Dashboard;
 using JiraLite.Api.Features.Comments;
 using JiraLite.Api.Features.Issues;
 using JiraLite.Api.Features.Labels;
@@ -45,12 +48,23 @@ builder.Services.AddOptions<JwtOptions>()
     .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
     .ValidateOnStart();
 
-var connectionString = builder.Configuration.GetConnectionString("Default");
-if (string.IsNullOrWhiteSpace(connectionString) && !builder.Environment.IsDevelopment())
+// Read once here only to fail fast on a misconfigured deployment. It must NOT be captured by the
+// DbContext/Hangfire registrations below — see ResolveConnectionString.
+var configuredConnectionString = builder.Configuration.GetConnectionString("Default");
+if (string.IsNullOrWhiteSpace(configuredConnectionString) && !builder.Environment.IsDevelopment())
 {
     throw new InvalidOperationException(
         "ConnectionStrings:Default is not configured. Set it via the ConnectionStrings__Default environment variable.");
 }
+
+// Resolved from the built container's IConfiguration, never captured from builder.Configuration.
+// Under WebApplicationFactory the test host layers its own configuration in only once the host is
+// actually built, so a value read at builder time is stale — the same trap already documented for
+// Jwt:SigningKey below. Capturing it pointed EF and Hangfire at appsettings.Development.json's
+// localhost,1433 dev database instead of the integration tests' throwaway SQL Server container.
+static string ResolveConnectionString(IServiceProvider serviceProvider) =>
+    serviceProvider.GetRequiredService<IConfiguration>().GetConnectionString("Default")
+        ?? throw new InvalidOperationException("ConnectionStrings:Default is not configured.");
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
 if (string.IsNullOrWhiteSpace(jwtOptions?.SigningKey) && !builder.Environment.IsDevelopment())
@@ -60,8 +74,10 @@ if (string.IsNullOrWhiteSpace(jwtOptions?.SigningKey) && !builder.Environment.Is
 }
 
 // ---- EF Core / SQL Server (spec/18-database.md, spec/20-coding-guidelines.md §9) ----
-builder.Services.AddDbContext<JiraLiteDbContext>(options =>
-    options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(JiraLiteDbContext).Assembly.FullName)));
+builder.Services.AddDbContext<JiraLiteDbContext>((serviceProvider, options) =>
+    options.UseSqlServer(
+        ResolveConnectionString(serviceProvider),
+        sql => sql.MigrationsAssembly(typeof(JiraLiteDbContext).Assembly.FullName)));
 
 // ---- FluentValidation (validators auto-discovered from this assembly) ----
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
@@ -210,7 +226,7 @@ builder.Services.AddHangfire((provider, config) => config
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
-    .UseSqlServerStorage(connectionString, new SqlServerStorageOptions
+    .UseSqlServerStorage(ResolveConnectionString(provider), new SqlServerStorageOptions
     {
         CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
         SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
@@ -367,6 +383,16 @@ ListNotifications.MapEndpoint(app);
 GetUnreadCount.MapEndpoint(app);
 MarkNotificationRead.MapEndpoint(app);
 MarkAllNotificationsRead.MapEndpoint(app);
+
+GetMyTasks.MapEndpoint(app);
+GetMyProjects.MapEndpoint(app);
+GetRecentActivity.MapEndpoint(app);
+GetDueDates.MapEndpoint(app);
+GetSprintTimeline.MapEndpoint(app);
+GetAdminOverview.MapEndpoint(app);
+ListAdminUsers.MapEndpoint(app);
+ListAdminProjects.MapEndpoint(app);
+GetRoleCatalog.MapEndpoint(app);
 
 app.Run();
 

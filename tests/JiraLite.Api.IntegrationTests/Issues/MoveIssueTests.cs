@@ -156,9 +156,12 @@ public class MoveIssueTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
         var adminNotifications = await db.Notifications.Where(n => n.RecipientUserId == admin.UserId).ToListAsync();
         Assert.Empty(adminNotifications);
 
-        var developerNotifications = await db.Notifications.Where(n => n.RecipientUserId == developer.UserId).ToListAsync();
-        Assert.Single(developerNotifications);
-        Assert.Equal(NotificationType.IssueStatusChanged, developerNotifications[0].Type);
+        // Scoped to IssueStatusChanged: assigning the Issue to the developer above already produced an
+        // IssueAssigned notification, which is not what this test is about.
+        var developerMoveNotifications = await db.Notifications
+            .Where(n => n.RecipientUserId == developer.UserId && n.Type == NotificationType.IssueStatusChanged)
+            .ToListAsync();
+        Assert.Single(developerMoveNotifications);
     }
 
     [Fact]
@@ -185,8 +188,12 @@ public class MoveIssueTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<JiraLiteDbContext>();
-        var developerNotifications = await db.Notifications.Where(n => n.RecipientUserId == developer.UserId).ToListAsync();
-        Assert.Empty(developerNotifications);
+        // Scoped to IssueStatusChanged for the same reason as the test above — the developer still
+        // legitimately holds the IssueAssigned notification from the assignment step.
+        var developerMoveNotifications = await db.Notifications
+            .Where(n => n.RecipientUserId == developer.UserId && n.Type == NotificationType.IssueStatusChanged)
+            .ToListAsync();
+        Assert.Empty(developerMoveNotifications);
     }
 
     [Fact]
