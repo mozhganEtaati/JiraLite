@@ -3,6 +3,7 @@ using JiraLite.Api.Common.Auth;
 using JiraLite.Api.Common.Behaviors;
 using JiraLite.Api.Common.Domain;
 using JiraLite.Api.Common.Infrastructure.Persistence;
+using JiraLite.Api.Common.Notifications;
 using JiraLite.Api.Common.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -43,6 +44,7 @@ public static class EditIssue
             HttpContext httpContext,
             IAuthorizationService authorizationService,
             JiraLiteDbContext db,
+            NotificationDispatcher notificationDispatcher,
             CancellationToken cancellationToken)
         {
             var issue = await db.Issues.SingleOrDefaultAsync(i => i.Id == issueId, cancellationToken);
@@ -50,6 +52,8 @@ public static class EditIssue
             {
                 return Results.NotFound();
             }
+
+            var previousAssigneeUserId = issue.AssigneeUserId;
 
             if (request.ReporterUserId is not null && request.ReporterUserId != issue.ReporterUserId)
             {
