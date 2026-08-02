@@ -4,6 +4,7 @@ using JiraLite.Api.Common.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JiraLite.Api.Common.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(JiraLiteDbContext))]
-    partial class JiraLiteDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260801193839_AlignNotificationIndexWithSpec")]
+    partial class AlignNotificationIndexWithSpec
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
