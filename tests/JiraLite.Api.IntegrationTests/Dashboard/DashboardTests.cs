@@ -85,6 +85,41 @@ public class DashboardTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
     }
 
     [Fact]
+    public async Task Activity_from_a_workspace_disappears_once_the_caller_is_removed_from_it()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+        var seeded = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+        var member = await TestDataHelper.AddProjectMemberAsync(
+            client, _factory, seeded.WorkspaceId, seeded.ProjectId, admin.AccessToken, "Developer");
+
+        // The member does something that writes an ActivityLogEntry, then reads it back.
+        client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {member.AccessToken}");
+        await TestDataHelper.CreateIssueAsync(client, seeded.ProjectId);
+
+        var before = await ReadActivityIdsAsync(client);
+        Assert.NotEmpty(before);
+
+        client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {admin.AccessToken}");
+        (await client.DeleteAsync($"/api/workspaces/{seeded.WorkspaceId}/members/{member.UserId}")).EnsureSuccessStatusCode();
+
+        // BR-04: the feed is scoped to the Workspaces the caller is currently a member of, so
+        // losing membership retracts the history rather than leaving it visible.
+        client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {member.AccessToken}");
+        var after = await ReadActivityIdsAsync(client);
+
+        Assert.Empty(after);
+    }
+
+    private static async Task<List<Guid>> ReadActivityIdsAsync(HttpClient client)
+    {
+        var response = await client.GetAsync("/api/dashboard/recent-activity");
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<JsonElement>())
+            .GetProperty("items").EnumerateArray().Select(i => i.GetProperty("id").GetGuid()).ToList();
+    }
+
+    [Fact]
     public async Task My_projects_returns_explicit_memberships_with_their_role()
     {
         var client = _factory.CreateClient();

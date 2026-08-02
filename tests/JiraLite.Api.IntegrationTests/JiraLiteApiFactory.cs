@@ -56,8 +56,19 @@ public class JiraLiteApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
                 ["Jwt:Issuer"] = "JiraLite",
                 ["Jwt:Audience"] = "JiraLite",
                 ["Jwt:SigningKey"] = "integration-test-signing-key-not-for-production-1234567890",
-                ["FileStorage:RootPath"] = Path.Combine(Path.GetTempPath(), "jiralite-tests", Guid.NewGuid().ToString())
+                ["FileStorage:RootPath"] = Path.Combine(Path.GetTempPath(), "jiralite-tests", Guid.NewGuid().ToString()),
+                // Every test class registers and logs in repeatedly from the same loopback
+                // address; the production limits would reject them well before the assertions
+                // run. RateLimitedApiFactory turns the limiter back on with tiny limits so the
+                // behaviour itself is still covered.
+                ["RateLimiting:Enabled"] = "false",
+                // This factory runs MigrateAsync itself, with retry (see InitializeAsync).
+                // Leaving startup auto-migration on would race it from the host build path
+                // without that retry — see Program.cs.
+                ["Database:AutoMigrate"] = "false"
             });
+
+            ApplyAdditionalConfiguration(configBuilder);
         });
 
         // Runs after the app's own registrations, so this replacement wins. Keeps the real
@@ -68,6 +79,14 @@ public class JiraLiteApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.RemoveAll<IEmailSender>();
             services.AddScoped<IEmailSender, NoOpEmailSender>();
         });
+    }
+
+    /// <summary>
+    /// Hook for derived factories that need to override the defaults above. Applied last, so
+    /// the later in-memory source wins over the base one.
+    /// </summary>
+    protected virtual void ApplyAdditionalConfiguration(IConfigurationBuilder configBuilder)
+    {
     }
 
     public async Task InitializeAsync()

@@ -4,3 +4,12 @@ obj/
 **/obj/
 .vs/
 *.user
+
+# Never ships in an image: it carries the dev signing key and dev connection string, and every
+# environment that runs this image supplies its own configuration through environment variables.
+appsettings.Development.json
+
+# Local runtime state — uploaded files live in a mounted volume, not in the image.
+storage/
+logs/
+*.log

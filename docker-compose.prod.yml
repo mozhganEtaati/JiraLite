@@ -1,0 +1,74 @@
+# Task T047 — production-shaped stack. Unlike docker-compose.yml (local dev), nothing here has a
+# default credential and the API never migrates its own schema: the `migrator` service runs the
+# same image with `--migrate`, has to exit 0, and only then does `api` start. See
+# docs/deployment-runbook.md for the operational procedure this file implements.
+#
+# Every variable below is required — `docker compose -f docker-compose.prod.yml config` fails
+# loudly if one is missing rather than starting with a blank signing key.
+
+services:
+  migrator:
+    image: ${JIRALITE_IMAGE:?JIRALITE_IMAGE must be set to the tagged image being deployed}
+    command: ["--migrate"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Default: ${JIRALITE_CONNECTION_STRING:?ConnectionStrings__Default must be set}
+    # A migration job runs once. Restarting it on failure would retry a broken migration forever and
+    # hide the failure from whoever is watching the deploy.
+    restart: "no"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  api:
+    image: ${JIRALITE_IMAGE:?JIRALITE_IMAGE must be set to the tagged image being deployed}
+    ports:
+      - "${JIRALITE_PORT:-8080}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Default: ${JIRALITE_CONNECTION_STRING:?ConnectionStrings__Default must be set}
+      Jwt__SigningKey: ${JIRALITE_JWT_SIGNING_KEY:?Jwt__SigningKey must be set}
+      Jwt__Issuer: ${JIRALITE_JWT_ISSUER:-JiraLite}
+      Jwt__Audience: ${JIRALITE_JWT_AUDIENCE:-JiraLite}
+      FileStorage__RootPath: "/app/storage"
+      FileStorage__PublicBaseUrl: ${JIRALITE_PUBLIC_BASE_URL:?JIRALITE_PUBLIC_BASE_URL must be set}
+      Email__SmtpHost: ${JIRALITE_SMTP_HOST:?Email__SmtpHost must be set}
+      Email__SmtpPort: ${JIRALITE_SMTP_PORT:-587}
+      Email__EnableSsl: ${JIRALITE_SMTP_ENABLE_SSL:-true}
+      Email__Username: ${JIRALITE_SMTP_USERNAME:-}
+      Email__Password: ${JIRALITE_SMTP_PASSWORD:-}
+      Email__FromAddress: ${JIRALITE_SMTP_FROM:?Email__FromAddress must be set}
+      # Explicit, not merely absent: this is the guard rail spec/20-coding-guidelines.md §9 asks
+      # for, and DatabaseMigrator refuses to start if it is ever flipped on outside Development.
+      Database__AutoMigrate: "false"
+    volumes:
+      - file-storage:/app/storage
+    restart: unless-stopped
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      migrator:
+        # The API only starts once the migration step has exited successfully. If the migration
+        # fails, the new version never serves a request against a schema it does not match.
+        condition: service_completed_successfully
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${JIRALITE_SA_PASSWORD:?JIRALITE_SA_PASSWORD must be set}
+    # Deliberately not published to the host — the database is reachable only from the compose
+    # network. Connect through an SSH tunnel or `docker compose exec` for maintenance.
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  sqlserver-data:
+  file-storage:

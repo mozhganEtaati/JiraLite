@@ -53,6 +53,22 @@ public class AttachmentTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
     }
 
     [Fact]
+    public async Task Uploading_to_an_archived_projects_issue_is_rejected_with_409()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+        var seeded = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+        var issueId = await TestDataHelper.CreateIssueAsync(client, seeded.ProjectId);
+
+        (await client.PostAsync($"/api/projects/{seeded.ProjectId}/archive", null)).EnsureSuccessStatusCode();
+
+        var response = await client.PostAsync(
+            $"/api/issues/{issueId}/attachments", BuildUpload([1, 2, 3, 4], "late.png", "image/png"));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Disallowed_extension_is_rejected_with_415()
     {
         var client = _factory.CreateClient();

@@ -2,6 +2,8 @@ using FluentValidation;
 using JiraLite.Api.Common.Behaviors;
 using JiraLite.Api.Common.Domain;
 using JiraLite.Api.Common.Infrastructure.Persistence;
+using JiraLite.Api.Common.Infrastructure.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace JiraLite.Api.Features.Auth;
@@ -85,5 +87,6 @@ public static class Register
         app.MapPost("/api/auth/register", Handler.Handle)
             .WithValidation<Request>()
             .AllowAnonymous()
+            .RequireRateLimiting(RateLimitingSetup.AuthPolicyName)
             .WithTags("Auth");
 }
