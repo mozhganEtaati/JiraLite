@@ -10,6 +10,10 @@ services:
       ConnectionStrings__Default: "Server=sqlserver,1433;Database=JiraLite;User Id=sa;Password=${SA_PASSWORD:-Dev_OnlyPassw0rd!};TrustServerCertificate=True"
       Jwt__SigningKey: "dev-only-signing-key-not-for-production-use-1234567890"
       FileStorage__RootPath: "/app/storage"
+      # spec/20-coding-guidelines.md §9 names the local Compose stack alongside Development as the
+      # one place migrations may be applied on startup. Set here rather than inherited from
+      # appsettings.Development.json, which .dockerignore keeps out of the image.
+      Database__AutoMigrate: "true"
     volumes:
       - file-storage:/app/storage
     depends_on:

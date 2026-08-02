@@ -36,7 +36,12 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+// spec/20-coding-guidelines.md §9 — `dotnet JiraLite.Api.dll --migrate` applies pending migrations
+// and exits, so a deployment can run the schema change as its own step (and fail on it) without
+// ever starting the API. The switch is stripped before the host sees it; see StripMigrateArgument.
+var runMigrateCommand = DatabaseMigrator.IsMigrateCommand(args);
+
+var builder = WebApplication.CreateBuilder(DatabaseMigrator.StripMigrateArgument(args));
 
 // ---- Serilog (spec/20-coding-guidelines.md §6) ----
 builder.Host.UseSerilog((context, services, configuration) => configuration
@@ -67,14 +72,19 @@ static string ResolveConnectionString(IServiceProvider serviceProvider) =>
     serviceProvider.GetRequiredService<IConfiguration>().GetConnectionString("Default")
         ?? throw new InvalidOperationException("ConnectionStrings:Default is not configured.");
 
+// Skipped for --migrate: that process never issues or validates a token, and requiring the key
+// would mean handing the signing secret to the migration job for no reason.
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
-if (string.IsNullOrWhiteSpace(jwtOptions?.SigningKey) && !builder.Environment.IsDevelopment())
+if (string.IsNullOrWhiteSpace(jwtOptions?.SigningKey) && !builder.Environment.IsDevelopment() && !runMigrateCommand)
 {
     throw new InvalidOperationException(
         "Jwt:SigningKey is not configured. Set it via the Jwt__SigningKey environment variable.");
 }
 
 // ---- EF Core / SQL Server (spec/18-database.md, spec/20-coding-guidelines.md §9) ----
+builder.Services.AddOptions<DatabaseOptions>()
+    .Bind(builder.Configuration.GetSection(DatabaseOptions.SectionName));
+
 builder.Services.AddDbContext<JiraLiteDbContext>((serviceProvider, options) =>
     options.UseSqlServer(
         ResolveConnectionString(serviceProvider),
@@ -244,6 +254,22 @@ builder.Services.AddHangfireServer();
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
+
+if (runMigrateCommand)
+{
+    // Returns before app.Run(), so neither the HTTP server nor the Hangfire worker ever starts —
+    // this process exists only to move the schema forward. A failure here throws, and the non-zero
+    // exit code is what stops the surrounding deployment from rolling the new image out.
+    await DatabaseMigrator.MigrateAsync(app.Services);
+    return;
+}
+
+if (DatabaseMigrator.ShouldMigrateOnStartup(
+        app.Environment,
+        app.Services.GetRequiredService<IOptions<DatabaseOptions>>().Value))
+{
+    await DatabaseMigrator.MigrateAsync(app.Services);
+}
 
 app.UseSerilogRequestLogging();
 
