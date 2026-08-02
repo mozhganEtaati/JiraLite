@@ -107,3 +107,27 @@ after release; and the known operational gaps (the Hangfire dashboard is still w
 
 T045 → T046 → T047 → T049 → T048 last (the regression pass must run against the final
 state of the code, not an intermediate one).
+
+---
+
+## Outcome
+
+Executed in that order. Deviations from the plan as written, all in the direction of
+doing more rather than less:
+
+- **T046** added `Ranking/ConcurrentRankTests.cs` with three races rather than one, and
+  `IndexCoverageTests.cs` grew to cover the unique `User.Email`/`Invitation.Token` indexes
+  as well as the composites. The query-plan assertions passed on the first run — the
+  optimizer does seek `IX_Issue_ProjectId_SprintId_Rank` and
+  `IX_Issue_ProjectId_AssigneeUserId` at 10,000 rows.
+- **T047** was verified by actually building the image and running
+  `docker-compose.prod.yml` end to end, not only by the unit-level
+  `DeploymentConfigurationTests`. That run found a real defect: the migrator container
+  died on the `Jwt:SigningKey` fail-fast. Fixed by skipping that check on the `--migrate`
+  path, since the migration step issues no tokens.
+- **T048** turned out to be substantially larger than "write a matrix and run the suite".
+  Four documents had no real coverage — 01 Authentication (nothing beyond incidental use
+  in `TestDataHelper`), 02 Users, 03 Workspaces (acceptance/last-admin/leave), and 04
+  Teams (nothing at all) — plus the delivery half of 13 Notifications and the
+  cross-cutting bullets of 16 RBAC. Those tests were written as part of this task; see
+  [docs/acceptance-criteria-coverage.md](../acceptance-criteria-coverage.md).
