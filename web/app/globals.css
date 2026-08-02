@@ -1,0 +1,419 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   JiraLite — "Riso"
+   Two inks on paper. Federal Blue carries all structure.
+   Fluo Pink is reserved for signal only: active sprint, overdue,
+   unread, drag target, focus. Nothing else may be pink.
+   ───────────────────────────────────────────────────────────── */
+
+@theme {
+  --color-paper: #efeeea;
+  --color-paper-deep: #e6e4de;
+  --color-surface: #ffffff;
+
+  --color-ink: #16161a;
+  --color-ink-soft: #6b6a66;
+  --color-ink-faint: #9d9b95;
+  --color-rule: #dad8d2;
+  --color-rule-soft: #e8e6e1;
+
+  --color-blue: #253c78;
+  --color-blue-soft: #4b5f99;
+  --color-blue-wash: #e7eaf3;
+
+  --color-pink: #ff4f8b;
+  --color-pink-soft: #ff85ae;
+  --color-pink-wash: #ffe4ee;
+
+  /* where both plates overprint */
+  --color-over: #5b2e6e;
+  --color-alarm: #a32020;
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
+
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+}
+
+/* ── base ─────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  border-color: var(--color-rule);
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* paper grain — riso prints on uncoated stock */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.55;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--color-pink-wash);
+  color: var(--color-over);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── typography ───────────────────────────────────────────── */
+
+.t-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.028em;
+  line-height: 1.03;
+}
+
+.t-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.3125rem;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.t-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.t-meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-soft);
+}
+
+.t-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ── signature: plate misregistration ─────────────────────────
+   Two ink plates never land perfectly on a riso press. Anything
+   being touched or dragged shows its second plate slipping out
+   from behind the first.
+   ─────────────────────────────────────────────────────────── */
+
+.plate {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-sm);
+}
+
+.plate::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--color-pink);
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  translate: 0 0;
+  transition:
+    translate 160ms cubic-bezier(0.2, 0, 0, 1),
+    opacity 160ms;
+  pointer-events: none;
+}
+
+.plate:hover::after,
+.plate[data-slip="true"]::after {
+  opacity: 1;
+  translate: 4px 4px;
+}
+
+/* ── controls ─────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 2.125rem;
+  padding-inline: 0.875rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    box-shadow 140ms cubic-bezier(0.2, 0, 0, 1),
+    translate 140ms,
+    background-color 120ms,
+    color 120ms;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-blue);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 4px 4px 0 var(--color-pink);
+  translate: -1px -1px;
+}
+.btn-primary:active:not(:disabled) {
+  box-shadow: 1px 1px 0 var(--color-pink);
+  translate: 1px 1px;
+}
+
+.btn-ghost {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-color: var(--color-rule);
+}
+.btn-ghost:hover:not(:disabled) {
+  box-shadow: 3px 3px 0 var(--color-rule);
+  translate: -1px -1px;
+}
+
+.btn-bare {
+  background: transparent;
+  color: var(--color-ink-soft);
+  border-color: transparent;
+  padding-inline: 0.5rem;
+}
+.btn-bare:hover:not(:disabled) {
+  color: var(--color-ink);
+  background: var(--color-paper-deep);
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--color-alarm);
+  border-color: #e0c2c2;
+}
+.btn-danger:hover:not(:disabled) {
+  background: var(--color-alarm);
+  color: #fff;
+  border-color: var(--color-alarm);
+}
+
+.btn-sm {
+  height: 1.75rem;
+  padding-inline: 0.625rem;
+  font-size: 0.75rem;
+}
+
+/* ── fields ───────────────────────────────────────────────── */
+
+.field {
+  display: block;
+  width: 100%;
+  height: 2.25rem;
+  padding-inline: 0.625rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--color-ink);
+  transition:
+    border-color 120ms,
+    box-shadow 120ms;
+}
+
+textarea.field {
+  height: auto;
+  padding-block: 0.5rem;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+select.field {
+  appearance: none;
+  padding-inline-end: 1.75rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' fill='none' stroke='%236b6a66' stroke-width='1.5'%3E%3Cpath d='M1 1.5 5 5.5 9 1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+}
+
+.field::placeholder {
+  color: var(--color-ink-faint);
+}
+
+.field:hover:not(:focus) {
+  border-color: var(--color-ink-faint);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--color-blue);
+  box-shadow: 3px 3px 0 var(--color-pink-wash);
+}
+
+.field[aria-invalid="true"] {
+  border-color: var(--color-alarm);
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.3125rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-ink-soft);
+}
+
+/* ── focus, everywhere ────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--color-pink);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* ── chips, keys, marks ───────────────────────────────────── */
+
+.key {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--color-blue);
+  background: var(--color-blue-wash);
+  padding: 0.0625rem 0.3125rem;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 1.375rem;
+  padding-inline: 0.4375rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--color-rule);
+  background: var(--color-surface);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+}
+
+.chip-signal {
+  border-color: var(--color-pink-soft);
+  background: var(--color-pink-wash);
+  color: var(--color-over);
+}
+
+.chip-ink {
+  border-color: transparent;
+  background: var(--color-blue-wash);
+  color: var(--color-blue);
+}
+
+/* ── surfaces ─────────────────────────────────────────────── */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-sm);
+}
+
+.sheet > * + * {
+  border-top: 1px solid var(--color-rule-soft);
+}
+
+.row-hover {
+  transition: background-color 110ms;
+}
+.row-hover:hover {
+  background: var(--color-blue-wash);
+}
+
+/* ── scrollbars ───────────────────────────────────────────── */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-rule) transparent;
+}
+
+/* ── motion ───────────────────────────────────────────────── */
+
+@keyframes plate-in {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.plate-in {
+  animation: plate-in 460ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@keyframes press {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 24px 0;
+  }
+}
+
+.press-bar {
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-blue) 0 8px,
+    var(--color-pink) 8px 16px,
+    transparent 16px 24px
+  );
+  animation: press 700ms linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .plate:hover::after,
+  .plate[data-slip="true"]::after {
+    translate: 4px 4px;
+  }
+}
