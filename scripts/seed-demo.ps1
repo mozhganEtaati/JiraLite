@@ -22,11 +22,15 @@
 .EXAMPLE
     pwsh ./scripts/seed-demo.ps1
     pwsh ./scripts/seed-demo.ps1 -ApiBase http://localhost:8080
+    pwsh ./scripts/seed-demo.ps1 -WebBase http://localhost:3111
 #>
 
 [CmdletBinding()]
 param(
     [string]$ApiBase = "http://localhost:8080",
+    # Only used for the sign-in URL printed at the end. `npm run dev` picks another
+    # port when 3000 is taken, so this is a parameter rather than a hardcoded 3000.
+    [string]$WebBase = "http://localhost:3000",
     [string]$SqlContainer = "jiralite-sqlserver-1",
     [string]$SaPassword = "Dev_OnlyPassw0rd!",
     [string]$DemoEmail = "demo@jiralite.dev",
@@ -48,14 +52,16 @@ function Invoke-Api {
     $headers = @{}
     if ($Token) { $headers["Authorization"] = "Bearer $Token" }
 
-    $args = @{
+    # Not $args: that is an automatic variable holding the function's own unbound
+    # arguments, and assigning to it works by luck rather than by design.
+    $request = @{
         Method      = $Method
         Uri         = "$ApiBase$Path"
         Headers     = $headers
         ContentType = "application/json"
     }
     if ($null -ne $Body) {
-        $args.Body = ($Body | ConvertTo-Json -Depth 10 -Compress)
+        $request.Body = ($Body | ConvertTo-Json -Depth 10 -Compress)
     }
 
     # /api/auth/* allows 10 requests per minute per IP (spec/01-authentication.md
@@ -63,7 +69,7 @@ function Invoke-Api {
     # expected part of a cold run, not a failure - wait out the window and retry.
     for ($attempt = 1; ; $attempt++) {
         try {
-            return Invoke-RestMethod @args
+            return Invoke-RestMethod @request
         } catch {
             $response = $_.Exception.Response
             $status = 0
@@ -557,7 +563,7 @@ $myProjects = Invoke-Api GET "/api/dashboard/my-projects" -Token $demo.Token
 $activity = Invoke-Api GET "/api/dashboard/recent-activity?limit=100" -Token $demo.Token
 
 Write-Host "`nDone." -ForegroundColor Green
-Write-Host "  Log in at http://localhost:3000/login" -ForegroundColor White
+Write-Host "  Log in at $WebBase/login" -ForegroundColor White
 Write-Host "  $DemoEmail / $DemoPassword" -ForegroundColor White
 Write-Host ""
 Write-Host "  My Tasks       $($myTasks.items.Count) open, assigned to you" -ForegroundColor Gray
