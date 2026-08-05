@@ -17,6 +17,10 @@ services:
       # spec/23-mcp-server.md NFR-05 — on for the local stack so the MCP surface can be exercised
       # during development. Production stays default-off until a deployment enables it deliberately.
       Mcp__Enabled: "true"
+      # Points reset emails at the local web app. Set here for the same reason AutoMigrate is:
+      # .dockerignore keeps appsettings.Development.json out of the image, so its copy of this
+      # value never reaches the container.
+      PasswordReset__ResetUrlTemplate: "http://localhost:3000/reset-password?token={token}"
     volumes:
       - file-storage:/app/storage
     depends_on:
