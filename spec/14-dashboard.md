@@ -22,7 +22,7 @@ Give every user a personalized landing view of what's assigned to them, which Pr
 - FR-01: My Tasks returns Issues where `AssigneeUserId` = caller, across Projects where the caller has a `ProjectMember` record, excluding archived Projects and Done-column Issues by default.
 - FR-02: My Projects returns Projects where the caller has an explicit `ProjectMember` record, including their role on each.
 - FR-03: Recent Activity returns `ActivityLogEntry` rows whose `WorkspaceId` is one the caller belongs to **and** whose `ProjectId` is either `NULL` (a workspace/team-level action) or a Project the caller can view (per BR-06), newest first, paginated.
-- FR-04: My Stats returns aggregate counts over the same Issue set as FR-01 — totals (assigned, open, done, overdue, due within seven days), a count per `BoardColumn`, a count per priority — plus a per-day count of the caller's own Issue actions over a trailing window of `days`.
+- FR-04: My Stats returns aggregate counts over the same Issue set as FR-01 — totals (assigned, open, done, overdue, due within seven days), a count per `BoardColumn`, and a count per priority over open work (BR-11) — plus a per-day count of the caller's own Issue actions over a trailing window of `days`.
 
 ## 5. Non-Functional Requirements
 
@@ -42,6 +42,7 @@ Give every user a personalized landing view of what's assigned to them, which Pr
 - BR-08: The My Stats activity window counts only `ActivityLogEntry` rows where the caller is the actor and `EntityType = 'Issue'`, split into `Created`, `StatusChanged`, and `Commented`. Other actions the caller took (creating a Workspace, editing a Project) are out of frame. No Workspace or Project filter applies, because these are the caller's own actions — the same actor-scoping as [02-users.md](02-users.md) FR-05.
 - BR-09: The activity window is dense and ends on the current UTC day: a day the caller did nothing comes back with zero counts, never omitted. `days` is clamped to 7–90, defaulting to 14. Day boundaries are UTC, matching `Issue.DueDateUtc` and every other date in the API.
 - BR-10: Status counts are grouped by `BoardColumn.Name`, not by `BoardColumnId`. Two Projects that both named a lane "In Progress" are one figure to the person reading it. Done columns sort last, so the reading runs from untouched work to finished work.
+- BR-11: The priority breakdown is the one part of My Stats that excludes Done-column Issues. Priority is a claim on what to pick up next, and finished work makes no such claim — counting it would also put a total beside the open total that disagrees with it. Totals and status counts still include Done work per BR-07.
 
 ## 7. Database Entities
 
@@ -183,7 +184,7 @@ Authorization: Bearer {accessToken}
 - Given a user removed from a Workspace, when Recent Activity is requested afterward, then entries from that Workspace no longer appear.
 - Given `includeDone=true`, when My Tasks is requested, then Issues in Done columns are included.
 - Given a Workspace Member with no `ProjectMember` record on Project X, when Recent Activity is requested, then entries with `ProjectId = X` do not appear, even though entries with `ProjectId = NULL` from the same Workspace do (BR-06).
-- Given a caller with an overdue Issue, one due within seven days, one moved to a Done column, and one in an archived Project, when My Stats is requested, then the totals read 3 assigned / 2 open / 1 done / 1 overdue / 1 due soon, and every priority comes back including the empty ones (FR-04, BR-07).
+- Given a caller with an overdue Issue, one due within seven days, one moved to a Done column, and one in an archived Project, when My Stats is requested, then the totals read 3 assigned / 2 open / 1 done / 1 overdue / 1 due soon, every priority comes back including the empty ones, and the priority counts sum to the open total rather than the assigned one (FR-04, BR-07, BR-11).
 - Given `days=2`, when My Stats is requested, then the window is clamped to 7, every one of those days is present in order, and the last is the current UTC day (BR-09).
 - Given a Project member who has been assigned nothing and has touched no Issue, when My Stats is requested, then every total and every day in the window is zero, even though they can view the Project (BR-07, BR-08).
 

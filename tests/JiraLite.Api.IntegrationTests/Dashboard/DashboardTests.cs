@@ -246,7 +246,14 @@ public class DashboardTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
         Assert.Equal(1, byPriority[IssuePriority.Critical]);
         Assert.Equal(1, byPriority[IssuePriority.High]);
         Assert.Equal(0, byPriority[IssuePriority.Medium]);
-        Assert.Equal(1, byPriority[IssuePriority.Low]);
+
+        // The Low one is the Issue that was moved to Done. Priority counts open work only
+        // (BR-11), so it drops out here even though the totals above still count it — and
+        // the breakdown sums to `open`, not to `assigned`.
+        Assert.Equal(0, byPriority[IssuePriority.Low]);
+        Assert.Equal(
+            totals.GetProperty("open").GetInt32(),
+            byPriority.Values.Sum());
     }
 
     [Fact]

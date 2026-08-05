@@ -10,6 +10,7 @@ namespace JiraLite.Api.Features.Dashboard;
 /// spec/14-dashboard.md FR-04, BR-07, BR-08 — counts behind the dashboard charts. Same scope as
 /// GetMyTasks (assigned to the caller, in Projects they belong to, archived Projects excluded), but
 /// Done-column Issues are counted rather than hidden: a completion figure needs its denominator.
+/// The priority breakdown is the one exception, and counts open work only (BR-11).
 /// Read-only, like every view in this document (BR-05).
 /// </summary>
 public static class GetMyStats
@@ -78,7 +79,12 @@ public static class GetMyStats
                 .Select(b => new StatusBucket(b.Name, b.Count, b.IsDoneColumn))
                 .ToList();
 
-            var priorityCounts = await assigned
+            var open = assigned.Where(x => !x.Column.IsDoneColumn);
+
+            // Open work only (BR-11). Priority is a claim on what to pick up next, which finished
+            // work makes no claim on — and counting it would put a total here that disagrees with
+            // the open total sitting right beside it.
+            var priorityCounts = await open
                 .GroupBy(x => x.Issue.Priority)
                 .Select(g => new { Priority = g.Key, Count = g.Count() })
                 .ToListAsync(cancellationToken);
@@ -90,7 +96,6 @@ public static class GetMyStats
                 .Select(p => new PriorityBucket(p, priorityCounts.FirstOrDefault(c => c.Priority == p)?.Count ?? 0))
                 .ToList();
 
-            var open = assigned.Where(x => !x.Column.IsDoneColumn);
             var overdue = await open.CountAsync(
                 x => x.Issue.DueDateUtc != null && x.Issue.DueDateUtc < today, cancellationToken);
             var dueSoon = await open.CountAsync(

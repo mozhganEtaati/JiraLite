@@ -55,17 +55,6 @@ export default function DashboardPage() {
       <PageHead
         eyebrow="My work"
         title={`Hello, ${me?.displayName?.split(" ")[0] ?? "there"}`}
-        actions={
-          <label className="flex cursor-pointer items-center gap-2 text-[13px] text-[var(--color-ink-soft)]">
-            <input
-              type="checkbox"
-              checked={includeDone}
-              onChange={(e) => setIncludeDone(e.target.checked)}
-              className="accent-[var(--color-blue)]"
-            />
-            Show finished
-          </label>
-        }
       />
 
       {stats.error ? (
@@ -124,9 +113,9 @@ export default function DashboardPage() {
                 <h2 className="t-eyebrow mb-3.5">Where your work sits</h2>
                 <StatusStrip byStatus={stats.data.byStatus} />
               </div>
-              {stats.data.totals.assigned > 0 && (
+              {stats.data.totals.open > 0 && (
                 <div className="border-t border-[var(--color-rule-soft)] p-4">
-                  <h2 className="t-eyebrow mb-3.5">By priority</h2>
+                  <h2 className="t-eyebrow mb-3.5">Open, by priority</h2>
                   <PriorityBars byPriority={stats.data.byPriority} />
                 </div>
               )}
@@ -136,7 +125,26 @@ export default function DashboardPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,1fr)]">
-        <Section title="Assigned to me" count={tasks.items.length}>
+        {/*
+          The filter belongs to the list it filters. Parked in the page head it
+          read as governing the whole screen, which it never did — the figures
+          above deliberately count finished work (spec/14-dashboard.md BR-07).
+        */}
+        <Section
+          title="Assigned to me"
+          count={tasks.items.length}
+          actions={
+            <label className="flex cursor-pointer items-center gap-2 text-[13px] text-[var(--color-ink-soft)]">
+              <input
+                type="checkbox"
+                checked={includeDone}
+                onChange={(e) => setIncludeDone(e.target.checked)}
+                className="accent-[var(--color-blue)]"
+              />
+              Show finished
+            </label>
+          }
+        >
           <div className="card overflow-hidden">
             {tasks.isLoading ? (
               <Loading label="Collecting your issues" />
