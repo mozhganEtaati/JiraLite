@@ -178,6 +178,142 @@ public class DashboardTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetime
     }
 
     [Fact]
+    public async Task My_stats_counts_the_callers_issues_by_status_priority_and_due_state()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+
+        var project = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+        var archived = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        async Task<(Guid Id, string RowVersion)> CreateAsync(
+            Guid projectId, string priority, DateOnly? dueDateUtc, Guid? assigneeUserId)
+        {
+            var response = await client.PostAsJsonAsync(
+                $"/api/projects/{projectId}/issues",
+                new { type = "Task", title = $"Task-{Guid.NewGuid():N}", priority, dueDateUtc, assigneeUserId });
+            response.EnsureSuccessStatusCode();
+            var created = await response.Content.ReadFromJsonAsync<JsonElement>();
+            var id = created.GetProperty("id").GetGuid();
+
+            // RowVersion is only on the read model, and moving an Issue needs it.
+            var getResponse = await client.GetAsync($"/api/issues/{id}");
+            getResponse.EnsureSuccessStatusCode();
+            var issue = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
+            return (id, issue.GetProperty("rowVersion").GetString()!);
+        }
+
+        await CreateAsync(project.ProjectId, IssuePriority.Critical, today.AddDays(-2), admin.UserId);
+        await CreateAsync(project.ProjectId, IssuePriority.High, today.AddDays(3), admin.UserId);
+        var finished = await CreateAsync(project.ProjectId, IssuePriority.Low, null, admin.UserId);
+
+        // Neither of these belongs to the caller's figures: one is somebody else's to pick up,
+        // the other sits in an archived Project (BR-01).
+        await CreateAsync(project.ProjectId, IssuePriority.Medium, today.AddDays(1), null);
+        await CreateAsync(archived.ProjectId, IssuePriority.Critical, today.AddDays(1), admin.UserId);
+        (await client.PostAsync($"/api/projects/{archived.ProjectId}/archive", null)).EnsureSuccessStatusCode();
+
+        (await client.PatchAsJsonAsync(
+            $"/api/issues/{finished.Id}/move",
+            new { boardColumnId = project.DoneColumnId, rowVersion = finished.RowVersion })).EnsureSuccessStatusCode();
+
+        var statsResponse = await client.GetAsync("/api/dashboard/my-stats");
+        statsResponse.EnsureSuccessStatusCode();
+        var stats = await statsResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        var totals = stats.GetProperty("totals");
+        Assert.Equal(3, totals.GetProperty("assigned").GetInt32());
+        Assert.Equal(2, totals.GetProperty("open").GetInt32());
+        Assert.Equal(1, totals.GetProperty("done").GetInt32());
+        Assert.Equal(1, totals.GetProperty("overdue").GetInt32());
+        Assert.Equal(1, totals.GetProperty("dueSoon").GetInt32());
+
+        // Done columns sort last, so the strip on the dashboard fills towards Done.
+        var byStatus = stats.GetProperty("byStatus").EnumerateArray().ToList();
+        Assert.Equal(2, byStatus.Count);
+        Assert.False(byStatus[0].GetProperty("isDone").GetBoolean());
+        Assert.Equal(2, byStatus[0].GetProperty("count").GetInt32());
+        Assert.True(byStatus[1].GetProperty("isDone").GetBoolean());
+        Assert.Equal(1, byStatus[1].GetProperty("count").GetInt32());
+
+        // All four priorities come back, most urgent first, so an empty row still reads as zero.
+        var byPriority = stats.GetProperty("byPriority").EnumerateArray()
+            .ToDictionary(p => p.GetProperty("priority").GetString()!, p => p.GetProperty("count").GetInt32());
+        Assert.Equal(
+            [IssuePriority.Critical, IssuePriority.High, IssuePriority.Medium, IssuePriority.Low],
+            stats.GetProperty("byPriority").EnumerateArray().Select(p => p.GetProperty("priority").GetString()!).ToArray());
+        Assert.Equal(1, byPriority[IssuePriority.Critical]);
+        Assert.Equal(1, byPriority[IssuePriority.High]);
+        Assert.Equal(0, byPriority[IssuePriority.Medium]);
+        Assert.Equal(1, byPriority[IssuePriority.Low]);
+    }
+
+    [Fact]
+    public async Task My_stats_streak_covers_every_day_in_the_window_and_ends_today()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+        var project = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+
+        var (issueId, rowVersion) = await CreateAssignedIssueAsync(client, project.ProjectId, admin.UserId);
+        await TestDataHelper.CreateIssueAsync(client, project.ProjectId);
+        (await client.PatchAsJsonAsync(
+            $"/api/issues/{issueId}/move",
+            new { boardColumnId = project.DoneColumnId, rowVersion })).EnsureSuccessStatusCode();
+        (await client.PostAsJsonAsync(
+            $"/api/issues/{issueId}/comments", new { body = "Ready for review." })).EnsureSuccessStatusCode();
+
+        // Below the floor, so it also proves the window is clamped rather than honoured.
+        var response = await client.GetAsync("/api/dashboard/my-stats?days=2");
+        response.EnsureSuccessStatusCode();
+        var stats = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(7, stats.GetProperty("days").GetInt32());
+
+        var activity = stats.GetProperty("activity").EnumerateArray().ToList();
+        Assert.Equal(7, activity.Count);
+
+        // Dense and in order: a quiet day is a zero, never a missing point on the axis.
+        var dates = activity.Select(d => DateOnly.Parse(d.GetProperty("date").GetString()!)).ToList();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        Assert.Equal(today, dates[^1]);
+        Assert.Equal(today.AddDays(-6), dates[0]);
+        Assert.Equal(dates.OrderBy(d => d).ToList(), dates);
+
+        var latest = activity[^1];
+        Assert.Equal(2, latest.GetProperty("created").GetInt32());
+        Assert.Equal(1, latest.GetProperty("moved").GetInt32());
+        Assert.Equal(1, latest.GetProperty("commented").GetInt32());
+    }
+
+    [Fact]
+    public async Task My_stats_counts_only_what_the_caller_did_and_owns()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+        var project = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+
+        await CreateAssignedIssueAsync(client, project.ProjectId, admin.UserId);
+
+        var member = await TestDataHelper.AddProjectMemberAsync(
+            client, _factory, project.WorkspaceId, project.ProjectId, admin.AccessToken, ProjectRole.Developer);
+
+        client.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue.Parse($"Bearer {member.AccessToken}");
+        var response = await client.GetAsync("/api/dashboard/my-stats");
+        response.EnsureSuccessStatusCode();
+        var stats = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        // The member can see the Project, but the figures are about them: nothing assigned,
+        // nothing done by their hand.
+        Assert.Equal(0, stats.GetProperty("totals").GetProperty("assigned").GetInt32());
+        Assert.Empty(stats.GetProperty("byStatus").EnumerateArray());
+        Assert.All(
+            stats.GetProperty("activity").EnumerateArray(),
+            d => Assert.Equal(0, d.GetProperty("created").GetInt32() + d.GetProperty("moved").GetInt32() + d.GetProperty("commented").GetInt32()));
+    }
+
+    [Fact]
     public async Task Recent_activity_hides_project_scoped_entries_from_a_member_without_that_project()
     {
         var client = _factory.CreateClient();

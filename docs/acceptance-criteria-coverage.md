@@ -167,6 +167,9 @@ covered, or covered by something narrower than it sounds, that is stated in the 
 | 3 | Recent Activity drops a Workspace after the user is removed from it | `DashboardTests.Activity_from_a_workspace_disappears_once_the_caller_is_removed_from_it` |
 | 4 | `includeDone=true` includes Done-column Issues | `DashboardTests.My_tasks_spans_projects_and_excludes_done_and_archived_by_default` (asserts both the default and the inclusive query) |
 | 5 | Project-scoped entries hidden, `ProjectId = NULL` entries shown (BR-06) | `DashboardTests.Recent_activity_hides_project_scoped_entries_from_a_member_without_that_project` |
+| 6 | My Stats totals, status buckets and full priority list (FR-04, BR-07) | `DashboardTests.My_stats_counts_the_callers_issues_by_status_priority_and_due_state` |
+| 7 | `days` clamped, window dense and ending on today (BR-09) | `DashboardTests.My_stats_streak_covers_every_day_in_the_window_and_ends_today` |
+| 8 | Figures are the caller's own, not the Project's (BR-07, BR-08) | `DashboardTests.My_stats_counts_only_what_the_caller_did_and_owns` |
 
 ## 15 — Calendar
 
