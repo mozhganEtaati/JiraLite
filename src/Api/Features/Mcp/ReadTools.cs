@@ -54,7 +54,7 @@ public class ReadTools(McpToolGateway gateway, JiraLiteDbContext db)
         [Description("Filter by issue type: Epic, Story, Task, Bug, or Subtask.")] string? type = null,
         [Description("Filter by board column id (GUID) — a column is the issue's status.")] Guid? boardColumnId = null,
         [Description("Filter by assignee user id (GUID).")] Guid? assigneeUserId = null,
-        [Description("Filter by priority: Lowest, Low, Medium, High, or Highest.")] string? priority = null,
+        [Description("Filter by priority: Low, Medium, High, or Critical.")] string? priority = null,
         [Description("Filter by sprint id (GUID).")] Guid? sprintId = null,
         [Description("Maximum issues to return, 1-100. Defaults to 25.")] int? limit = null,
         CancellationToken cancellationToken = default) =>
