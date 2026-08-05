@@ -8,6 +8,7 @@ public class JiraLiteDbContext(DbContextOptions<JiraLiteDbContext> options) : Db
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PersonalAccessToken> PersonalAccessTokens => Set<PersonalAccessToken>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
 

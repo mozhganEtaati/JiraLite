@@ -118,6 +118,10 @@ builder.Services.AddScoped<NotificationDispatcher>();
 builder.Services.AddOptions<InvitationOptions>()
     .Bind(builder.Configuration.GetSection(InvitationOptions.SectionName));
 
+// ---- Password reset config (spec/01-authentication.md BR-09) ----
+builder.Services.AddOptions<PasswordResetOptions>()
+    .Bind(builder.Configuration.GetSection(PasswordResetOptions.SectionName));
+
 // ---- MCP server (spec/23-mcp-server.md) ----
 builder.Services.AddOptions<McpOptions>()
     .Bind(builder.Configuration.GetSection(McpOptions.SectionName));
@@ -329,6 +333,8 @@ Register.MapEndpoint(app);
 Login.MapEndpoint(app);
 Refresh.MapEndpoint(app);
 Logout.MapEndpoint(app);
+ForgotPassword.MapEndpoint(app);
+ResetPassword.MapEndpoint(app);
 
 GetMyProfile.MapEndpoint(app);
 UpdateMyProfile.MapEndpoint(app);

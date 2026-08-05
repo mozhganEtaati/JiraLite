@@ -49,6 +49,7 @@ Compose fails immediately if any of these is unset — none has a default.
 | `JIRALITE_PUBLIC_BASE_URL` | `FileStorage__PublicBaseUrl` | Public origin; avatar URLs are built from it |
 | `JIRALITE_SMTP_HOST` | `Email__SmtpHost` | |
 | `JIRALITE_SMTP_FROM` | `Email__FromAddress` | |
+| `JIRALITE_RESET_URL_TEMPLATE` | `PasswordReset__ResetUrlTemplate` | Optional. Web origin + `{token}`, e.g. `https://app.example.com/reset-password?token={token}`. Unset, reset emails carry the bare token instead of a link |
 
 Optional, with defaults: `JIRALITE_PORT` (8080), `JIRALITE_JWT_ISSUER`/`JIRALITE_JWT_AUDIENCE`
 (`JiraLite`), `JIRALITE_SMTP_PORT` (587), `JIRALITE_SMTP_ENABLE_SSL` (true),

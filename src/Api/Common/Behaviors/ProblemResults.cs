@@ -7,6 +7,13 @@ namespace JiraLite.Api.Common.Behaviors;
 /// </summary>
 public static class ProblemResults
 {
+    /// <summary>
+    /// For a 400 the handler decides on state, not shape — field-level validation failures are
+    /// produced by <see cref="ValidationFilter{TRequest}"/> with an `errors` dictionary instead.
+    /// </summary>
+    public static IResult BadRequest(string type, string detail) =>
+        Results.Problem(type: type, title: "Bad Request", statusCode: StatusCodes.Status400BadRequest, detail: detail);
+
     public static IResult Conflict(string type, string detail) =>
         Results.Problem(type: type, title: "Conflict", statusCode: StatusCodes.Status409Conflict, detail: detail);
 

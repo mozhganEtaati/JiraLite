@@ -33,7 +33,7 @@ Purpose: platform-level identity and credentials.
 | CreatedAtUtc | datetime2 | No | |
 | UpdatedAtUtc | datetime2 | No | |
 
-Relationships: 1:1 → `UserProfile`, `NotificationPreference`. 1:N → `RefreshToken`, `Notification` (recipient), `ActivityLogEntry` (actor), and referenced as Reporter/Assignee/Author/Owner across most other tables.
+Relationships: 1:1 → `UserProfile`, `NotificationPreference`. 1:N → `RefreshToken`, `PasswordResetToken`, `Notification` (recipient), `ActivityLogEntry` (actor), and referenced as Reporter/Assignee/Author/Owner across most other tables.
 
 ### RefreshToken
 Purpose: session renewal credential, rotated on use.
@@ -65,6 +65,20 @@ Purpose: long-lived machine credential for MCP clients, which cannot participate
 | RevokedAtUtc | datetime2 | Yes | |
 
 Indexes: unique (`TokenHash`) for authentication lookup; (`UserId`, `RevokedAtUtc`) for the active-token list and count.
+
+### PasswordResetToken
+Purpose: single-use, short-lived credential emailed to a user who cannot log in ([01-authentication.md](01-authentication.md) FR-06, FR-07). Never interchangeable with a `RefreshToken` — it buys one password change, not a session.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| Id | Guid | No | PK |
+| UserId | Guid | No | FK → User, `ON DELETE CASCADE` (owned by User aggregate) |
+| TokenHash | string(128) | No | SHA-256 hash, unique |
+| ExpiresAtUtc | datetime2 | No | Default 60 minutes after creation ([01-authentication.md](01-authentication.md) BR-09) |
+| CreatedAtUtc | datetime2 | No | |
+| UsedAtUtc | datetime2 | Yes | Null = redeemable; set on redemption and on supersession by a newer request (BR-10) |
+
+Indexes: unique (`TokenHash`) for the redemption lookup; (`UserId`, `UsedAtUtc`) for invalidating the outstanding token.
 
 ### UserProfile
 Purpose: display identity.
@@ -372,7 +386,7 @@ No audit fields (pure join table — §2).
 
 See [00-project-overview.md](00-project-overview.md) §7–8 for the narrative version. In FK direction:
 
-`RefreshToken/PersonalAccessToken/UserProfile/NotificationPreference/Notification → User` · `Workspace → Organization` · `WorkspaceMember/Invitation/Team/Project → Workspace` · `TeamMember → Team` · `ProjectMember/Board/Label → Project` · `BoardColumn → Board` · `Sprint → Board, Project` · `Issue → Project, BoardColumn, Sprint(0..1), Issue(0..1, self)` · `Comment/Attachment → Issue` · `IssueLabel → Issue, Label` · `ActivityLogEntry → User, Workspace, Project(0..1)`
+`RefreshToken/PersonalAccessToken/PasswordResetToken/UserProfile/NotificationPreference/Notification → User` · `Workspace → Organization` · `WorkspaceMember/Invitation/Team/Project → Workspace` · `TeamMember → Team` · `ProjectMember/Board/Label → Project` · `BoardColumn → Board` · `Sprint → Board, Project` · `Issue → Project, BoardColumn, Sprint(0..1), Issue(0..1, self)` · `Comment/Attachment → Issue` · `IssueLabel → Issue, Label` · `ActivityLogEntry → User, Workspace, Project(0..1)`
 
 ## 9. Why Some Owning Relationships Use `NO ACTION` Instead of `CASCADE`
 

@@ -38,6 +38,9 @@ services:
       Email__Username: ${JIRALITE_SMTP_USERNAME:-}
       Email__Password: ${JIRALITE_SMTP_PASSWORD:-}
       Email__FromAddress: ${JIRALITE_SMTP_FROM:?Email__FromAddress must be set}
+      # Where the emailed password reset link points. Optional: left unset the mail carries the
+      # bare token instead, which is usable but means whoever receives it has to paste it by hand.
+      PasswordReset__ResetUrlTemplate: ${JIRALITE_RESET_URL_TEMPLATE:-}
       # Explicit, not merely absent: this is the guard rail spec/20-coding-guidelines.md §9 asks
       # for, and DatabaseMigrator refuses to start if it is ever flipped on outside Development.
       Database__AutoMigrate: "false"

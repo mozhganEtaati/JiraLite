@@ -22,6 +22,14 @@ covered, or covered by something narrower than it sounds, that is stated in the 
 | 4 | Replaying a revoked token revokes the whole family | `AuthenticationTests.Reusing_a_revoked_refresh_token_revokes_every_active_token_for_that_user` |
 | 5 | Logout revokes the presented token; later refresh fails | `AuthenticationTests.Logout_revokes_the_presented_token_and_a_later_refresh_with_it_fails` |
 | 6 | Deactivated account fails login with the generic message | `AuthenticationTests.A_deactivated_account_fails_login_with_the_same_message_as_a_wrong_password` |
+| 7 | Unregistered email gets an identical reset response and no token | `Auth/PasswordResetTests.An_unknown_address_is_answered_exactly_like_a_registered_one_and_mints_nothing` |
+| 8 | A requested reset persists the token hashed and mails the raw value | `PasswordResetTests.A_requested_reset_persists_the_token_hashed_never_in_the_clear` |
+| 9 | Redeeming a token swaps the password over | `PasswordResetTests.Completing_a_reset_makes_the_new_password_work_and_the_old_one_fail` |
+| 10 | A reset token is single-use | `PasswordResetTests.A_token_cannot_be_redeemed_twice` |
+| 11 | An expired reset token is rejected | `PasswordResetTests.An_expired_token_is_rejected` |
+| 12 | Requesting a second link invalidates the first | `PasswordResetTests.Requesting_a_second_link_invalidates_the_first` |
+| 13 | Completing a reset revokes sessions opened beforehand | `PasswordResetTests.Completing_a_reset_revokes_every_live_session` |
+| 14 | Deactivated user gets the same answer but no token | `PasswordResetTests.A_deactivated_account_gets_the_same_answer_but_no_token` |
 
 ## 02 — Users
 
