@@ -342,6 +342,25 @@ export type MyProject = {
   role: ProjectRoleName | WorkspaceRoleName;
 };
 
+export type MyStats = {
+  days: number;
+  totals: {
+    assigned: number;
+    open: number;
+    done: number;
+    overdue: number;
+    dueSoon: number;
+  };
+  byStatus: { name: string; count: number; isDone: boolean }[];
+  byPriority: { priority: PriorityName; count: number }[];
+  activity: {
+    date: string;
+    created: number;
+    moved: number;
+    commented: number;
+  }[];
+};
+
 export type FeedEntry = {
   id: string;
   actor: UserSummary;

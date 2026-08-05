@@ -3,6 +3,7 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api, type Listed, type Paged, type Query } from "./api";
 import type {
+  MyStats,
   ProjectRoleResult,
   Workspace,
   WorkspaceRoleResult,
@@ -51,6 +52,19 @@ export function useList<T>(
     queryFn: () => api.get<Listed<T>>(path, query),
   });
   return { ...q, items: q.data?.items ?? [] };
+}
+
+/**
+ * The counts behind the dashboard figures. One shape, not a list, so it sits
+ * outside useList — and it keeps the previous window on screen while a longer
+ * one loads, rather than blanking the charts on every range change.
+ */
+export function useMyStats(days: number) {
+  return useQuery({
+    queryKey: ["my-stats", days],
+    queryFn: () => api.get<MyStats>("/api/dashboard/my-stats", { days }),
+    placeholderData: (previous) => previous,
+  });
 }
 
 /* ── role gates ───────────────────────────────────────────────

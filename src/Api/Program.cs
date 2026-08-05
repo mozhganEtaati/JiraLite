@@ -457,6 +457,7 @@ MarkAllNotificationsRead.MapEndpoint(app);
 
 GetMyTasks.MapEndpoint(app);
 GetMyProjects.MapEndpoint(app);
+GetMyStats.MapEndpoint(app);
 GetRecentActivity.MapEndpoint(app);
 GetDueDates.MapEndpoint(app);
 GetSprintTimeline.MapEndpoint(app);
