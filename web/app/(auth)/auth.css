@@ -1,0 +1,458 @@
+/* ─────────────────────────────────────────────────────────────
+   Signed-out screens only.
+
+   These pages follow a soft card composition rather than the two-ink
+   press language the signed-in app uses, so every rule here is scoped
+   under .auth-scope and nothing leaks into the app shell.
+
+   The palette is sampled from the illustration in the promo card:
+   its sky blues, the navy of the chairs, and the coral the people
+   wear. Each ink is taken down to the depth its own background needs
+   to stay readable, so the screen reads as one piece with the art.
+   ───────────────────────────────────────────────────────────── */
+
+.auth-scope {
+  --a-bg: #ffffff;
+  --a-panel: #eef7fc;
+  --a-blue: #0d8ecf;
+  --a-blue-deep: #064c89;
+  --a-blue-light: #47c7fd;
+  --a-ink: #0a2540;
+  /* deep enough to clear 4.5:1 on the panel — the mock's grey did not */
+  --a-muted: #4a6e88;
+  /* the art's coral, dark enough to carry 13px text on the panel */
+  --a-accent: #c4442b;
+  --a-radius: 26px;
+
+  /*
+   * Every vertical step is measured against the viewport, so the screen packs
+   * itself down on a short window instead of scrolling. The floors are the
+   * smallest sizes that still read and stay comfortable to hit.
+   */
+  --a-gap-sm: clamp(0.5rem, 1.4vh, 0.875rem);
+  --a-gap: clamp(0.75rem, 2vh, 1.25rem);
+  --a-gap-lg: clamp(1rem, 3.2vh, 2rem);
+  --a-control: clamp(2.5rem, 5vh, 2.875rem);
+
+  background: var(--a-bg);
+  color: var(--a-ink);
+}
+
+.auth-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: clamp(1rem, 4vh, 3rem) 1.25rem;
+}
+
+/* below lg there is no promo beside the form, so this is a card, not a page */
+.auth-composition {
+  position: relative;
+  width: 100%;
+  max-width: 27.5rem;
+}
+
+/* ── the narrow layout: artwork stacked over the form ──────── */
+
+.auth-promo-compact {
+  margin-bottom: clamp(0.5rem, 2vh, 1.25rem);
+  text-align: center;
+}
+
+/*
+ * The frame is square but the drawing inside it is not, so the box is given the
+ * drawing's own ratio and the image is cropped to it — otherwise a third of the
+ * height here would be the transparent padding around the art.
+ */
+.auth-promo-compact-img {
+  display: block;
+  /* the vh term keeps the artwork from pushing the form off a short screen */
+  width: min(13rem, 58%, 26vh);
+  height: auto;
+  margin-inline: auto;
+  aspect-ratio: 660 / 390;
+  object-fit: cover;
+  object-position: center 47%;
+}
+
+/*
+ * Past this point the window is shorter than the form itself, and the artwork
+ * is the part worth losing: it is decoration, and everything below it is not.
+ */
+@media (max-height: 640px) and (max-width: 1023px) {
+  .auth-promo-compact {
+    display: none;
+  }
+}
+
+.auth-promo-compact-brand {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+/* the form panel sits on the right; the blue card slides under its left edge */
+.auth-panel {
+  position: relative;
+  z-index: 1;
+  background: var(--a-panel);
+  border-radius: var(--a-radius);
+  padding: clamp(1.5rem, 4.6vh, 2.5rem) 1.75rem clamp(1.25rem, 3.2vh, 2rem);
+}
+
+/*
+ * From lg the promo stands beside the form. The min-height holds it steady:
+ * the aside is measured against the composition, so a short screen (register)
+ * would otherwise shrink the card until the scene climbed over its copy. The
+ * width is capped by the height too — left unbounded, a short window would
+ * stretch the card wide and flat instead of keeping the artwork's proportions.
+ */
+@media (min-width: 1024px) {
+  .auth-composition {
+    display: flex;
+    min-height: min(640px, 74vh);
+    max-width: min(1000px, 125vh);
+  }
+
+  .auth-panel {
+    display: flex;
+    align-items: center;
+    width: 62%;
+    margin-left: auto;
+    padding: clamp(1.75rem, 5.4vh, 3.25rem) clamp(1.75rem, 9.5%, 3.25rem)
+      clamp(1.25rem, 3.4vh, 2rem);
+  }
+}
+
+.auth-panel-inner {
+  width: 100%;
+  margin: 0 auto;
+  max-width: 380px;
+}
+
+/* everything to the left of the panel: the blue card, its base, the scene */
+/*
+ * The panel is anchored right, so the only way the form moves toward the middle
+ * of the page is by taking width from this side. 38/62 is as far as it goes
+ * before the card is too narrow to hold "Management" on one line.
+ */
+.auth-aside {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 38%;
+}
+
+/*
+ * The card stops short of the base — the scene stands in front of its foot —
+ * and its right edge runs past the aside so the panel covers it: the seam is
+ * the panel's own edge, never a rounded corner floating beside it.
+ */
+.auth-promo-card {
+  position: absolute;
+  right: -10.5%;
+  top: 5%;
+  bottom: 17%;
+  width: 79%;
+  /* the extra inline-end padding is the slice the panel hides */
+  padding: clamp(1.125rem, 3vh, 1.75rem) calc(1rem + 14%)
+    clamp(1.125rem, 3vh, 1.75rem) clamp(0.875rem, 2.6vh, 1.5rem);
+  color: #fff;
+  border-radius: 12px 12px 3px 3px;
+  /* deep end of the art's blues — the lighter sky cannot carry white text */
+  background: linear-gradient(
+    155deg,
+    #0a7cba 0%,
+    #076397 50%,
+    #04395f 100%
+  );
+}
+
+/* the lockup brings its own type — this slot only places it */
+.auth-promo-brand {
+  display: flex;
+}
+
+.auth-promo-title {
+  margin-top: clamp(0.75rem, 2.6vh, 1.5rem);
+  font-family: var(--font-display);
+  /* tied to the height, since the composition's width is capped by it too */
+  font-size: clamp(1.05rem, 3.2vh, 1.6rem);
+  font-weight: 700;
+  line-height: 1.24;
+  letter-spacing: -0.015em;
+  max-width: 9ch;
+}
+
+.auth-promo-sub {
+  margin-top: clamp(0.5rem, 1.5vh, 0.875rem);
+  max-width: 21ch;
+  font-size: clamp(0.6875rem, 1.5vh, 0.75rem);
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+/* the scene stands in front of the card and spills out to the left */
+.auth-scene {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2%;
+  z-index: 2;
+  line-height: 0;
+  /* clips the frame's empty bottom quarter, which would otherwise scroll */
+  overflow: hidden;
+}
+
+/*
+ * The artwork is a 700×700 frame whose drawing only occupies y 135–525, so the
+ * square is padded with transparency. The negative margin (resolved against the
+ * width, which equals the height here) drops the empty quarter below the base,
+ * putting the table's feet on it rather than floating them above.
+ */
+.auth-scene-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: -25%;
+}
+
+/* the base the whole composition stands on */
+.auth-base {
+  position: absolute;
+  left: 17%;
+  right: 0;
+  bottom: calc(2% - 7px);
+  height: 7px;
+  border-radius: 4px;
+  background: var(--a-ink);
+  z-index: 3;
+}
+
+/* ── type ─────────────────────────────────────────────────── */
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4.4vh, 2.5rem);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
+  color: var(--a-blue-deep);
+}
+
+/* the form's own rhythm, so the spacing lives beside the rest of the screen */
+.auth-form {
+  margin-top: clamp(1.25rem, 3.4vh, 2.25rem);
+}
+
+.auth-form > * + * {
+  margin-top: var(--a-gap);
+}
+
+.auth-form > .auth-submit {
+  margin-top: clamp(1rem, 2.8vh, 1.75rem);
+}
+
+/* ── form ─────────────────────────────────────────────────── */
+
+.auth-scope .label {
+  margin-bottom: clamp(0.375rem, 1vh, 0.5rem);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--a-ink);
+}
+
+.auth-scope .field {
+  height: var(--a-control);
+  padding-inline: 1.125rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 0.875rem;
+  color: var(--a-ink);
+  box-shadow: 0 1px 2px rgba(10, 37, 64, 0.05);
+}
+
+.auth-scope .field::placeholder {
+  color: #8aa3b8;
+}
+
+.auth-scope .field:hover:not(:focus) {
+  border-color: #cbe6f5;
+}
+
+.auth-scope .field:focus {
+  border-color: var(--a-blue);
+  box-shadow: 0 0 0 3px rgba(13, 142, 207, 0.2);
+}
+
+.auth-scope .field[aria-invalid="true"] {
+  border-color: #d9534f;
+}
+
+.auth-scope .field-inset .field {
+  padding-inline-end: 3rem;
+}
+
+.auth-scope .field-eye {
+  right: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  color: #9db4c6;
+}
+
+.auth-scope .field-eye:hover {
+  color: var(--a-blue);
+  background: rgba(13, 142, 207, 0.12);
+}
+
+.auth-link {
+  color: var(--a-blue);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.auth-link:hover {
+  color: var(--a-blue-deep);
+}
+
+.auth-hint {
+  display: block;
+  width: 100%;
+  margin-top: var(--a-gap);
+  text-align: right;
+  font-size: 0.75rem;
+  color: #35709a;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-hint:hover {
+  color: var(--a-blue);
+}
+
+.auth-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: clamp(2.75rem, 5.4vh, 3rem);
+  border-radius: 12px;
+  border: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(92deg, #1290c9 0%, #0d6ea9 55%, #064c89 100%);
+  box-shadow: 0 12px 22px -12px rgba(6, 76, 137, 0.85);
+  transition:
+    filter 140ms,
+    translate 140ms,
+    box-shadow 140ms;
+}
+
+.auth-submit:hover:not(:disabled) {
+  filter: saturate(1.06) brightness(1.04);
+  translate: 0 -1px;
+  box-shadow: 0 16px 26px -12px rgba(6, 76, 137, 0.9);
+}
+
+.auth-submit:active:not(:disabled) {
+  translate: 0 1px;
+  box-shadow: 0 8px 16px -12px rgba(6, 76, 137, 0.85);
+}
+
+.auth-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── the "or log in via" row ──────────────────────────────── */
+
+.auth-divider {
+  margin-top: var(--a-gap-lg);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--a-muted);
+}
+
+.auth-socials {
+  display: flex;
+  justify-content: center;
+  gap: 0.875rem;
+  margin-top: var(--a-gap-sm);
+}
+
+.auth-social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(2.5rem, 5.4vh, 3rem);
+  height: clamp(2.5rem, 5.4vh, 3rem);
+  border-radius: 14px;
+  border: 1px solid #dcedf8;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(10, 37, 64, 0.07);
+  transition:
+    translate 140ms,
+    box-shadow 140ms;
+}
+
+.auth-social:hover {
+  translate: 0 -2px;
+  box-shadow: 0 8px 14px -6px rgba(10, 37, 64, 0.22);
+}
+
+.auth-note {
+  margin-top: var(--a-gap-sm);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--a-muted);
+}
+
+.auth-foot {
+  margin-top: var(--a-gap-lg);
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--a-muted);
+}
+
+/*
+ * The one warm note on the screen, borrowed from what the people in the
+ * illustration are wearing: it marks the way out of a screen you cannot
+ * use yet, so it should not read as another blue among the blues.
+ */
+.auth-foot-link {
+  display: block;
+  margin-top: 0.375rem;
+  color: var(--a-accent);
+}
+
+.auth-foot-link:hover {
+  color: #9e321d;
+}
+
+.auth-error {
+  border-radius: 10px;
+  border: 1px solid #f0c9c9;
+  background: #fdf3f3;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  color: #b03434;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-submit,
+  .auth-social {
+    transition: none;
+  }
+}

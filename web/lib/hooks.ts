@@ -4,6 +4,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { api, type Listed, type Paged, type Query } from "./api";
 import type {
   ProjectRoleResult,
+  Workspace,
   WorkspaceRoleResult,
   WorkspaceItem,
 } from "./types";
@@ -105,4 +106,13 @@ export function useProjectRole(projectId?: string) {
 
 export function useWorkspaces() {
   return useList<WorkspaceItem>(["workspaces"], "/api/workspaces");
+}
+
+/** The workspace itself, for the name every workspace screen puts in its head. */
+export function useWorkspace(workspaceId?: string) {
+  return useQuery({
+    queryKey: ["workspace", workspaceId],
+    enabled: Boolean(workspaceId),
+    queryFn: () => api.get<Workspace>(`/api/workspaces/${workspaceId}`),
+  });
 }

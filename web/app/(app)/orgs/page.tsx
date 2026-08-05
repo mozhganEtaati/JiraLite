@@ -15,7 +15,7 @@ import {
   Modal,
   PageHead,
   Section,
-} from "@/components/ui";
+} from "@/components/kit";
 
 export default function OrgsPage() {
   const [creating, setCreating] = useState(false);

@@ -38,6 +38,15 @@ export function projectSettingsTabs(
   ];
 }
 
+/** The account pages are only reachable from the user menu, so they carry their own bar. */
+export function accountSettingsTabs(): [string, string][] {
+  return [
+    ["/settings/profile", "Profile"],
+    ["/settings/notifications", "Notifications"],
+    ["/settings/activity", "My activity"],
+  ];
+}
+
 export function workspaceSettingsTabs(
   workspaceId: string,
   isAdmin: boolean,

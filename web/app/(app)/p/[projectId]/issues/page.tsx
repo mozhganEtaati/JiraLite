@@ -28,7 +28,7 @@ import {
   Loading,
   LoadMore,
   PageHead,
-} from "@/components/ui";
+} from "@/components/kit";
 import { NewIssueButton } from "@/components/new-issue";
 
 const FILTER_KEYS = [

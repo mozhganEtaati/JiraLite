@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect } from "react";
 import { api } from "@/lib/api";
 import { useCurrentWorkspace, ProjectTabs } from "@/components/shell";
-import { Loading } from "@/components/ui";
+import { Loading } from "@/components/kit";
 import type { Project } from "@/lib/types";
 
 export default function ProjectLayout({

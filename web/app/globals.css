@@ -1,42 +1,60 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────
-   JiraLite — "Riso"
-   Two inks on paper. Federal Blue carries all structure.
-   Fluo Pink is reserved for signal only: active sprint, overdue,
-   unread, drag target, focus. Nothing else may be pink.
+   JiraLite — "Daylight"
+
+   A tracker a team lives in all day, so the screen is built the
+   way the signed-out composition is: a deep navy panel on the
+   left, white work surface on the right. Structure comes from
+   that split and from hairlines, never from a wash of tint.
+
+   Navy is the ink and the frame. Sky is every action you can
+   take. Coral is signal only — active sprint, overdue, unread,
+   drag target, the number someone is blocked on. Nothing else
+   may be coral.
+
+   Surfaces are flat, like the artwork: one hairline rule, no
+   resting shadow. A shadow means a thing has left the page —
+   it is picked up, dragged, or floating over everything else.
    ───────────────────────────────────────────────────────────── */
 
 @theme {
-  --color-paper: #efeeea;
-  --color-paper-deep: #e6e4de;
+  --color-ink: #0b2138;
+  --color-ink-soft: #3d5a73;
+  --color-ink-faint: #7d95a8;
+
+  --color-paper: #ffffff;
   --color-surface: #ffffff;
+  --color-haze: #eff5fa;
+  --color-paper-deep: #e7eff6;
 
-  --color-ink: #16161a;
-  --color-ink-soft: #6b6a66;
-  --color-ink-faint: #9d9b95;
-  --color-rule: #dad8d2;
-  --color-rule-soft: #e8e6e1;
+  --color-rule: #dfe9f1;
+  --color-rule-soft: #edf3f8;
 
-  --color-blue: #253c78;
-  --color-blue-soft: #4b5f99;
-  --color-blue-wash: #e7eaf3;
+  --color-blue: #0f6fa8;
+  --color-blue-deep: #0c5480;
+  --color-blue-soft: #1e90d2;
+  --color-blue-wash: #e3f1fb;
 
-  --color-pink: #ff4f8b;
-  --color-pink-soft: #ff85ae;
-  --color-pink-wash: #ffe4ee;
+  /* the signal ink */
+  --color-pink: #e0533a;
+  --color-pink-soft: #f08a72;
+  --color-pink-wash: #fdece7;
+  /* the same signal, deep enough to be read as small text */
+  --color-over: #b23d24;
 
-  /* where both plates overprint */
-  --color-over: #5b2e6e;
-  --color-alarm: #a32020;
+  --color-alarm: #a4231b;
 
   --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
-
-  --radius-xs: 2px;
-  --radius-sm: 3px;
 }
+
+/*
+ * The radius scale is derived from --radius further down, which is the knob
+ * shadcn's own components turn. Setting it twice would give a shadcn button
+ * and a .btn beside it two different corners.
+ */
 
 /* ── base ─────────────────────────────────────────────────── */
 
@@ -60,20 +78,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* paper grain — riso prints on uncoated stock */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  pointer-events: none;
-  opacity: 0.55;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
-}
-
 ::selection {
-  background: var(--color-pink-wash);
-  color: var(--color-over);
+  background: var(--color-blue-wash);
+  color: var(--color-blue-deep);
 }
 
 a {
@@ -81,37 +88,43 @@ a {
   text-decoration: none;
 }
 
-/* ── typography ───────────────────────────────────────────── */
+/* ── typography ───────────────────────────────────────────────
+   Display for the one title on the screen, sans for everything
+   you read, mono for everything you compare: dates, counts,
+   keys. Mono is data, not decoration — no small-caps labels.
+   ─────────────────────────────────────────────────────────── */
 
 .t-display {
   font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.028em;
-  line-height: 1.03;
+  font-weight: 700;
+  font-size: clamp(1.5rem, 2.4vw, 1.875rem);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 
 .t-title {
   font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.3125rem;
+  font-weight: 700;
+  font-size: 1.0625rem;
   letter-spacing: -0.02em;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 
+/* a quiet label, not an announcement */
 .t-eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-ink-faint);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-ink-soft);
 }
 
 .t-meta {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
-  color: var(--color-ink-soft);
+  color: var(--color-ink-faint);
 }
 
 .t-num {
@@ -120,37 +133,173 @@ a {
   letter-spacing: -0.02em;
 }
 
-/* ── signature: plate misregistration ─────────────────────────
-   Two ink plates never land perfectly on a riso press. Anything
-   being touched or dragged shows its second plate slipping out
-   from behind the first.
+/* ── the path ─────────────────────────────────────────────────
+   A node and a hairline, borrowed from the connectors in the
+   artwork. It says what this screen sits inside, so it only
+   ever carries a real container — never a decorative kicker.
+   ─────────────────────────────────────────────────────────── */
+
+.path {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-ink-faint);
+}
+
+.path::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-blue-soft);
+}
+
+.path::after {
+  content: "";
+  height: 1px;
+  width: 1.25rem;
+  flex: none;
+  background: var(--color-rule);
+}
+
+/* ── surfaces ─────────────────────────────────────────────────
+   Flat by default. A shadow means the thing is off the page.
    ─────────────────────────────────────────────────────────── */
 
 .plate {
   position: relative;
   background: var(--color-surface);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
+  transition:
+    box-shadow 160ms cubic-bezier(0.2, 0, 0, 1),
+    border-color 160ms,
+    translate 160ms cubic-bezier(0.2, 0, 0, 1);
 }
 
-.plate::after {
+.plate:hover {
+  border-color: var(--color-blue-soft);
+  translate: 0 -1px;
+  box-shadow: 0 10px 20px -14px rgba(11, 33, 56, 0.6);
+}
+
+/* picked up, or the column it would land in */
+.plate[data-slip="true"] {
+  border-color: var(--color-pink);
+  box-shadow: 0 12px 24px -12px rgba(224, 83, 58, 0.55);
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-lg);
+}
+
+.sheet > * + * {
+  border-top: 1px solid var(--color-rule-soft);
+}
+
+.row-hover {
+  transition: background-color 110ms;
+}
+.row-hover:hover {
+  background: var(--color-haze);
+}
+
+/* ── the rail ─────────────────────────────────────────────────
+   The dark half of the composition. Its own scale of greys sits
+   here so the nav never has to reach for page colours that were
+   mixed for white.
+   ─────────────────────────────────────────────────────────── */
+
+.rail {
+  --r-fg: #a9bed0;
+  --r-fg-strong: #ffffff;
+  --r-line: rgba(255, 255, 255, 0.09);
+  --r-raise: rgba(255, 255, 255, 0.06);
+
+  background: var(--color-ink);
+  color: var(--r-fg);
+}
+
+.rail-divider {
+  border-color: var(--r-line);
+}
+
+.rail-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #6f8ba3;
+}
+
+.rail-switcher {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  text-align: left;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--r-line);
+  background: var(--r-raise);
+  color: var(--r-fg-strong);
+  cursor: pointer;
+  transition:
+    background-color 120ms,
+    border-color 120ms;
+}
+
+.rail-switcher:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.rail-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.625rem 0.4375rem 1.125rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  color: var(--r-fg);
+  transition:
+    background-color 120ms,
+    color 120ms;
+}
+
+.rail-item:hover {
+  background: var(--r-raise);
+  color: var(--r-fg-strong);
+}
+
+/*
+ * The current screen carries a node — the same mark the path in the page head
+ * opens with, so the rail and the head name the same place. Deliberately not
+ * the signal ink: where you are is not something being flagged at you.
+ */
+.rail-item[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--r-fg-strong);
+  font-weight: 500;
+}
+
+.rail-item[aria-current="page"]::before {
   content: "";
   position: absolute;
-  inset: -1px;
-  border: 1px solid var(--color-pink);
-  border-radius: var(--radius-sm);
-  opacity: 0;
-  translate: 0 0;
-  transition:
-    translate 160ms cubic-bezier(0.2, 0, 0, 1),
-    opacity 160ms;
-  pointer-events: none;
-}
-
-.plate:hover::after,
-.plate[data-slip="true"]::after {
-  opacity: 1;
-  translate: 4px 4px;
+  left: 0.375rem;
+  top: 50%;
+  translate: 0 -50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-blue-soft);
 }
 
 /* ── controls ─────────────────────────────────────────────── */
@@ -160,18 +309,17 @@ a {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  height: 2.125rem;
-  padding-inline: 0.875rem;
-  border-radius: var(--radius-sm);
+  height: 2.25rem;
+  padding-inline: 0.9375rem;
+  border-radius: var(--radius-md);
   border: 1px solid transparent;
   font-size: 0.8125rem;
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
   transition:
-    box-shadow 140ms cubic-bezier(0.2, 0, 0, 1),
-    translate 140ms,
     background-color 120ms,
+    border-color 120ms,
     color 120ms;
 }
 
@@ -185,12 +333,7 @@ a {
   color: #fff;
 }
 .btn-primary:hover:not(:disabled) {
-  box-shadow: 4px 4px 0 var(--color-pink);
-  translate: -1px -1px;
-}
-.btn-primary:active:not(:disabled) {
-  box-shadow: 1px 1px 0 var(--color-pink);
-  translate: 1px 1px;
+  background: var(--color-blue-deep);
 }
 
 .btn-ghost {
@@ -199,8 +342,9 @@ a {
   border-color: var(--color-rule);
 }
 .btn-ghost:hover:not(:disabled) {
-  box-shadow: 3px 3px 0 var(--color-rule);
-  translate: -1px -1px;
+  border-color: var(--color-blue-soft);
+  color: var(--color-blue-deep);
+  background: var(--color-blue-wash);
 }
 
 .btn-bare {
@@ -210,14 +354,14 @@ a {
   padding-inline: 0.5rem;
 }
 .btn-bare:hover:not(:disabled) {
-  color: var(--color-ink);
-  background: var(--color-paper-deep);
+  color: var(--color-blue-deep);
+  background: var(--color-haze);
 }
 
 .btn-danger {
   background: transparent;
   color: var(--color-alarm);
-  border-color: #e0c2c2;
+  border-color: #edc9c6;
 }
 .btn-danger:hover:not(:disabled) {
   background: var(--color-alarm);
@@ -226,8 +370,8 @@ a {
 }
 
 .btn-sm {
-  height: 1.75rem;
-  padding-inline: 0.625rem;
+  height: 1.875rem;
+  padding-inline: 0.6875rem;
   font-size: 0.75rem;
 }
 
@@ -236,11 +380,11 @@ a {
 .field {
   display: block;
   width: 100%;
-  height: 2.25rem;
-  padding-inline: 0.625rem;
+  height: 2.375rem;
+  padding-inline: 0.75rem;
   background: var(--color-surface);
   border: 1px solid var(--color-rule);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font-size: 0.875rem;
   font-family: inherit;
   color: var(--color-ink);
@@ -259,7 +403,7 @@ textarea.field {
 select.field {
   appearance: none;
   padding-inline-end: 1.75rem;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' fill='none' stroke='%236b6a66' stroke-width='1.5'%3E%3Cpath d='M1 1.5 5 5.5 9 1.5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' fill='none' stroke='%233d5a73' stroke-width='1.5'%3E%3Cpath d='M1 1.5 5 5.5 9 1.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.625rem center;
 }
@@ -269,13 +413,13 @@ select.field {
 }
 
 .field:hover:not(:focus) {
-  border-color: var(--color-ink-faint);
+  border-color: var(--color-blue-soft);
 }
 
 .field:focus {
   outline: none;
   border-color: var(--color-blue);
-  box-shadow: 3px 3px 0 var(--color-pink-wash);
+  box-shadow: 0 0 0 3px rgba(30, 144, 210, 0.22);
 }
 
 .field[aria-invalid="true"] {
@@ -284,18 +428,54 @@ select.field {
 
 .label {
   display: block;
-  margin-bottom: 0.3125rem;
+  margin-bottom: 0.375rem;
   font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--color-ink-soft);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* a field that carries a control inside its own well */
+.field-inset {
+  position: relative;
+}
+
+.field-inset .field {
+  padding-inline-end: 2.625rem;
+}
+
+.field-eye {
+  position: absolute;
+  right: 0.375rem;
+  top: 50%;
+  translate: 0 -50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 999px;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  transition:
+    color 120ms,
+    background-color 120ms;
+}
+
+.field-eye:hover {
+  color: var(--color-blue);
+  background: var(--color-blue-wash);
 }
 
 /* ── focus, everywhere ────────────────────────────────────── */
 
 :focus-visible {
-  outline: 2px solid var(--color-pink);
+  outline: 2px solid var(--color-blue-soft);
   outline-offset: 2px;
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
+}
+
+.rail :focus-visible {
+  outline-color: #ffffff;
 }
 
 /* ── chips, keys, marks ───────────────────────────────────── */
@@ -307,10 +487,10 @@ select.field {
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: var(--color-blue);
+  color: var(--color-blue-deep);
   background: var(--color-blue-wash);
-  padding: 0.0625rem 0.3125rem;
-  border-radius: var(--radius-xs);
+  padding: 0.0625rem 0.375rem;
+  border-radius: 5px;
   white-space: nowrap;
 }
 
@@ -319,8 +499,8 @@ select.field {
   align-items: center;
   gap: 0.3rem;
   height: 1.375rem;
-  padding-inline: 0.4375rem;
-  border-radius: var(--radius-xs);
+  padding-inline: 0.5rem;
+  border-radius: 999px;
   border: 1px solid var(--color-rule);
   background: var(--color-surface);
   font-size: 0.6875rem;
@@ -338,26 +518,47 @@ select.field {
 .chip-ink {
   border-color: transparent;
   background: var(--color-blue-wash);
-  color: var(--color-blue);
+  color: var(--color-blue-deep);
 }
 
-/* ── surfaces ─────────────────────────────────────────────── */
+/* ── the timeline ─────────────────────────────────────────────
+   The path device again, run vertically, for the one list that
+   really is a sequence: what happened, newest first.
+   ─────────────────────────────────────────────────────────── */
 
-.card {
+.timeline > li {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.timeline > li::before {
+  content: "";
+  position: absolute;
+  left: 0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-rule);
+}
+
+.timeline > li:first-child::before {
+  top: 1.125rem;
+}
+
+.timeline > li:last-child::before {
+  bottom: calc(100% - 1.125rem);
+}
+
+.timeline > li::after {
+  content: "";
+  position: absolute;
+  left: 0.3125rem;
+  top: 1rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
   background: var(--color-surface);
-  border: 1px solid var(--color-rule);
-  border-radius: var(--radius-sm);
-}
-
-.sheet > * + * {
-  border-top: 1px solid var(--color-rule-soft);
-}
-
-.row-hover {
-  transition: background-color 110ms;
-}
-.row-hover:hover {
-  background: var(--color-blue-wash);
+  border: 1.5px solid var(--color-blue-soft);
 }
 
 /* ── scrollbars ───────────────────────────────────────────── */
@@ -372,7 +573,7 @@ select.field {
 @keyframes plate-in {
   from {
     opacity: 0;
-    translate: 0 10px;
+    translate: 0 8px;
   }
   to {
     opacity: 1;
@@ -381,7 +582,7 @@ select.field {
 }
 
 .plate-in {
-  animation: plate-in 460ms cubic-bezier(0.2, 0, 0, 1) both;
+  animation: plate-in 380ms cubic-bezier(0.2, 0, 0, 1) both;
 }
 
 @keyframes press {
@@ -394,12 +595,13 @@ select.field {
 }
 
 .press-bar {
-  height: 2px;
+  height: 3px;
+  border-radius: 999px;
   background-image: repeating-linear-gradient(
     90deg,
-    var(--color-blue) 0 8px,
-    var(--color-pink) 8px 16px,
-    transparent 16px 24px
+    var(--color-blue) 0 10px,
+    var(--color-blue-soft) 10px 18px,
+    transparent 18px 24px
   );
   animation: press 700ms linear infinite;
 }
@@ -412,8 +614,78 @@ select.field {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .plate:hover::after,
-  .plate[data-slip="true"]::after {
-    translate: 4px 4px;
+  .plate:hover {
+    translate: 0 0;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   shadcn/ui contract.
+
+   Its components read these names, so they are pointed at the
+   same palette above rather than a second one. Change a colour
+   in @theme and the shadcn components follow.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --radius: 0.625rem;
+
+  --background: #ffffff;
+  --foreground: #0b2138;
+  --card: #ffffff;
+  --card-foreground: #0b2138;
+  --popover: #ffffff;
+  --popover-foreground: #0b2138;
+  --primary: #0f6fa8;
+  --primary-foreground: #ffffff;
+  --secondary: #eff5fa;
+  --secondary-foreground: #0c5480;
+  --muted: #eff5fa;
+  --muted-foreground: #3d5a73;
+  --accent: #e3f1fb;
+  --accent-foreground: #0c5480;
+  --destructive: #a4231b;
+  --destructive-foreground: #ffffff;
+  --border: #dfe9f1;
+  --input: #dfe9f1;
+  --ring: #1e90d2;
+
+  --chart-1: #0f6fa8;
+  --chart-2: #1e90d2;
+  --chart-3: #e0533a;
+  --chart-4: #0b2138;
+  --chart-5: #7d95a8;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+

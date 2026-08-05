@@ -13,7 +13,7 @@ import {
   Field,
   Loading,
   PageHead,
-} from "@/components/ui";
+} from "@/components/kit";
 
 export default function ColumnsPage() {
   const { projectId, boardId } = useParams<{

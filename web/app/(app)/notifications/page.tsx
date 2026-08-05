@@ -12,7 +12,7 @@ import {
   Loading,
   LoadMore,
   PageHead,
-} from "@/components/ui";
+} from "@/components/kit";
 
 const LABELS: Record<NotificationItem["type"], string> = {
   IssueAssigned: "Assigned to you",

@@ -13,7 +13,7 @@ import {
   PriorityMark,
   TypeMark,
 } from "@/components/marks";
-import { Empty, ErrorNote, Loading, LoadMore, PageHead, Section } from "@/components/ui";
+import { Empty, ErrorNote, Loading, LoadMore, PageHead, Section } from "@/components/kit";
 
 export default function DashboardPage() {
   const { me } = useSession();

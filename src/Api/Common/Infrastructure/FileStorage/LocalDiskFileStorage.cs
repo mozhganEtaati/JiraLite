@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
 namespace JiraLite.Api.Common.Infrastructure.FileStorage;
@@ -8,9 +7,7 @@ namespace JiraLite.Api.Common.Infrastructure.FileStorage;
 /// spec/02-users.md BR-02. Files are served back via static-file middleware mounted at
 /// "/files" in Program.cs.
 /// </summary>
-public class LocalDiskFileStorage(
-    IOptions<FileStorageOptions> options,
-    IHttpContextAccessor httpContextAccessor) : IFileStorage
+public class LocalDiskFileStorage(IOptions<FileStorageOptions> options) : IFileStorage
 {
     private readonly FileStorageOptions _options = options.Value;
 
@@ -47,6 +44,21 @@ public class LocalDiskFileStorage(
         return Task.FromResult(stream);
     }
 
+    /// <summary>
+    /// Root-relative unless a deployment names a base URL of its own.
+    /// <para>
+    /// This value is persisted (UserProfile.AvatarUrl), so it must not carry anything
+    /// about the request that happened to write it. Building it from Scheme/Host baked
+    /// the caller's Host header into the database: behind a proxy that is the internal
+    /// address rather than the public one, moving hosts stranded every stored URL, and
+    /// a forged Host header ended up stored and served to other people.
+    /// </para>
+    /// <para>
+    /// A relative URL resolves against whatever origin served the page, which is the
+    /// same origin that proxies "/files" — so it stays correct wherever it is read.
+    /// Set PublicBaseUrl when the files are served from somewhere else entirely.
+    /// </para>
+    /// </summary>
     public string GetPublicUrl(string storageKey)
     {
         if (!string.IsNullOrEmpty(_options.PublicBaseUrl))
@@ -54,12 +66,6 @@ public class LocalDiskFileStorage(
             return $"{_options.PublicBaseUrl.TrimEnd('/')}/files/{storageKey}";
         }
 
-        var request = httpContextAccessor.HttpContext?.Request;
-        if (request is null)
-        {
-            return $"/files/{storageKey}";
-        }
-
-        return $"{request.Scheme}://{request.Host}/files/{storageKey}";
+        return $"/files/{storageKey}";
     }
 }

@@ -16,7 +16,7 @@ import { cx } from "@/lib/format";
 import { useWorkspaceRole, useWorkspaces } from "@/lib/hooks";
 import { useSession } from "@/lib/providers";
 import { Avatar } from "@/components/marks";
-import { RegMark, Wordmark } from "@/components/wordmark";
+import { Logo } from "@/components/wordmark";
 
 /* ── which workspace am I in ──────────────────────────────── */
 
@@ -78,24 +78,23 @@ export function Rail() {
 
   return (
     <nav
-      className="flex w-[228px] shrink-0 flex-col border-r border-[var(--color-rule)] bg-[var(--color-paper-deep)]"
+      className="rail flex w-[236px] shrink-0 flex-col"
       aria-label="Main"
     >
-      <div className="flex items-center gap-2.5 px-4 py-4">
-        <RegMark size={18} />
-        <Wordmark size={18} />
+      <div className="flex items-center px-4 py-5">
+        <Logo size={18} tone="light" />
       </div>
 
       {/* workspace switcher */}
       <div className="relative px-3 pb-3">
         <button
           type="button"
-          className="plate flex w-full items-center justify-between gap-2 px-2.5 py-2 text-left"
+          className="rail-switcher"
           onClick={() => setSwitcherOpen((v) => !v)}
           aria-expanded={switcherOpen}
         >
           <span className="min-w-0">
-            <span className="t-eyebrow block text-[10px]">Workspace</span>
+            <span className="rail-label block">Workspace</span>
             <span className="block truncate text-[13px] font-medium">
               {current?.name ?? "None yet"}
             </span>
@@ -104,7 +103,7 @@ export function Rail() {
             <path
               d="M1 1.5 5 5.5 9 1.5"
               fill="none"
-              stroke="var(--color-ink-soft)"
+              stroke="currentColor"
               strokeWidth="1.5"
             />
           </svg>
@@ -112,8 +111,12 @@ export function Rail() {
 
         {switcherOpen && (
           <div
-            className="absolute inset-x-3 z-30 mt-1 max-h-[320px] overflow-auto border border-[var(--color-ink)] bg-[var(--color-surface)]"
-            style={{ borderRadius: 3, boxShadow: "4px 4px 0 var(--color-pink)" }}
+            className="plate-in absolute inset-x-3 z-30 mt-1 max-h-[320px] overflow-auto bg-[var(--color-surface)] text-[var(--color-ink)]"
+            style={{
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid var(--color-rule)",
+              boxShadow: "0 18px 40px -18px rgba(11,33,56,.65)",
+            }}
           >
             <ul className="sheet">
               {workspaces.map((w) => (
@@ -139,7 +142,7 @@ export function Rail() {
               className="row-hover block border-t border-[var(--color-rule)] px-2.5 py-2 text-[13px] font-medium text-[var(--color-blue)]"
               onClick={() => setSwitcherOpen(false)}
             >
-              New workspace…
+              New workspace
             </Link>
           </div>
         )}
@@ -233,28 +236,34 @@ export function Rail() {
       </div>
 
       {/* user */}
-      <div className="relative border-t border-[var(--color-rule)] p-3">
+      <div className="rail-divider relative border-t p-3">
         <button
           type="button"
-          className="row-hover flex w-full items-center gap-2 rounded-[3px] px-1.5 py-1.5 text-left"
+          className="rail-item w-full !pl-2"
           onClick={() => setMenuOpen((v) => !v)}
           aria-expanded={menuOpen}
         >
-          <Avatar user={me ?? null} size={24} />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[13px] font-medium">
-              {me?.displayName ?? "…"}
-            </span>
-            <span className="t-meta block truncate text-[11px]">
-              {me?.email}
+          <span className="flex min-w-0 items-center gap-2">
+            <Avatar user={me ?? null} size={24} />
+            <span className="min-w-0 flex-1 text-left">
+              <span className="block truncate text-[13px] font-medium">
+                {me?.displayName ?? "…"}
+              </span>
+              <span className="block truncate font-mono text-[11px] text-[#6f8ba3]">
+                {me?.email}
+              </span>
             </span>
           </span>
         </button>
 
         {menuOpen && (
           <div
-            className="absolute inset-x-3 bottom-[calc(100%-6px)] z-30 border border-[var(--color-ink)] bg-[var(--color-surface)]"
-            style={{ borderRadius: 3, boxShadow: "4px 4px 0 var(--color-pink)" }}
+            className="plate-in absolute inset-x-3 bottom-[calc(100%-6px)] z-30 bg-[var(--color-surface)] text-[var(--color-ink)]"
+            style={{
+              borderRadius: "var(--radius-lg)",
+              border: "1px solid var(--color-rule)",
+              boxShadow: "0 18px 40px -18px rgba(11,33,56,.65)",
+            }}
           >
             <ul className="sheet">
               {[
@@ -272,7 +281,7 @@ export function Rail() {
                   </Link>
                 </li>
               ))}
-              <li>
+              <li className="border-t border-[var(--color-rule)]">
                 <button
                   type="button"
                   className="row-hover block w-full px-2.5 py-2 text-left text-[13px] text-[var(--color-alarm)]"
@@ -300,10 +309,8 @@ function Group({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mb-4">
-      {label && (
-        <div className="t-eyebrow mb-1.5 px-2 text-[10px]">{label}</div>
-      )}
+    <div className="mb-5">
+      {label && <div className="rail-label mb-1.5 px-2.5">{label}</div>}
       <ul className="space-y-0.5">{children}</ul>
     </div>
   );
@@ -325,12 +332,7 @@ function Item({
       <Link
         href={href}
         aria-current={active ? "page" : undefined}
-        className={cx(
-          "flex items-center justify-between gap-2 rounded-[3px] border-l-[3px] px-2 py-1.5 text-[13px] transition-colors",
-          active
-            ? "border-[var(--color-pink)] bg-[var(--color-surface)] font-medium text-[var(--color-blue)]"
-            : "border-transparent text-[var(--color-ink-soft)] hover:bg-[color-mix(in_srgb,var(--color-surface)_60%,transparent)] hover:text-[var(--color-ink)]",
-        )}
+        className="rail-item"
       >
         <span className="truncate">{children}</span>
         {trailing}
@@ -348,11 +350,11 @@ function UnreadBadge() {
   if (!data?.unreadCount) return null;
   return (
     <span
-      className="t-num inline-flex h-[17px] min-w-[17px] items-center justify-center px-1 text-[10px] font-medium"
+      className="t-num inline-flex h-[18px] min-w-[18px] items-center justify-center px-1.5 text-[10px] font-medium"
       style={{
         background: "var(--color-pink)",
         color: "#fff",
-        borderRadius: 2,
+        borderRadius: 999,
       }}
     >
       {data.unreadCount > 99 ? "99+" : data.unreadCount}
@@ -389,9 +391,9 @@ export function ProjectTabs({ projectId }: { projectId: string }) {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={cx(
-                  "-mb-px block border-b-2 px-2.5 py-2 text-[13px] whitespace-nowrap transition-colors",
+                  "-mb-px block border-b-2 px-2.5 py-2.5 text-[13px] whitespace-nowrap transition-colors",
                   active
-                    ? "border-[var(--color-pink)] font-medium text-[var(--color-ink)]"
+                    ? "border-[var(--color-blue-soft)] font-medium text-[var(--color-ink)]"
                     : "border-transparent text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]",
                 )}
               >

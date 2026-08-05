@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ApiError, api } from "@/lib/api";
 import { useSession } from "@/lib/providers";
-import { ErrorNote, Field } from "@/components/ui";
-import { RegMark, Wordmark } from "@/components/wordmark";
+import { Field, PasswordInput } from "@/components/kit";
 
 export default function RegisterPage() {
   const { signIn } = useSession();
@@ -34,23 +33,26 @@ export default function RegisterPage() {
   }
 
   const fieldError = error instanceof ApiError ? error : null;
+  const message =
+    error instanceof ApiError
+      ? (error.detail ?? error.title)
+      : error instanceof Error
+        ? error.message
+        : error
+          ? "That request could not be completed."
+          : null;
 
   return (
     <>
-      <div className="mb-8 flex items-center gap-2.5 lg:hidden">
-        <RegMark size={18} />
-        <Wordmark size={19} />
-      </div>
+      <h1 className="auth-title">Register</h1>
 
-      <div className="t-eyebrow mb-2">Create account</div>
-      <h1 className="t-title mb-6">Start tracking work</h1>
-
-      <form onSubmit={onSubmit} className="space-y-3.5" noValidate>
-        <Field label="Email" error={fieldError?.field("email")}>
+      <form onSubmit={onSubmit} className="auth-form" noValidate>
+        <Field label="E-mail" error={fieldError?.field("email")}>
           <input
             className="field"
             type="email"
             name="email"
+            placeholder="example.company@mail.com"
             autoComplete="email"
             autoFocus
             required
@@ -65,10 +67,9 @@ export default function RegisterPage() {
           hint="At least 8 characters."
           error={fieldError?.field("password")}
         >
-          <input
-            className="field"
-            type="password"
+          <PasswordInput
             name="password"
+            placeholder="••••••••••"
             autoComplete="new-password"
             required
             minLength={8}
@@ -78,24 +79,21 @@ export default function RegisterPage() {
           />
         </Field>
 
-        {error && !fieldError?.errors && <ErrorNote error={error} />}
+        {message && !fieldError?.errors && (
+          <p role="alert" className="auth-error">
+            {message}
+          </p>
+        )}
 
-        <button
-          type="submit"
-          className="btn btn-primary w-full"
-          disabled={pending}
-        >
+        <button type="submit" className="auth-submit" disabled={pending}>
           {pending ? "Creating account…" : "Create account"}
         </button>
       </form>
 
-      <p className="mt-6 border-t border-[var(--color-rule)] pt-4 text-[13px] text-[var(--color-ink-soft)]">
+      <p className="auth-foot">
         Already have an account?{" "}
-        <Link
-          href="/login"
-          className="font-medium text-[var(--color-blue)] underline decoration-[var(--color-pink)] decoration-2 underline-offset-2"
-        >
-          Sign in
+        <Link href="/login" className="auth-link">
+          Log in
         </Link>
       </p>
     </>

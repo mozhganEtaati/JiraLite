@@ -11,7 +11,7 @@ import {
   type PriorityName,
   type ProjectMember,
 } from "@/lib/types";
-import { ErrorNote, Field, Modal } from "@/components/ui";
+import { ErrorNote, Field, Modal } from "@/components/kit";
 import { TypeMark } from "@/components/marks";
 
 export function NewIssueButton({

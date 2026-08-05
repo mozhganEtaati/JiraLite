@@ -16,7 +16,7 @@ import {
   Loading,
   Modal,
   PageHead,
-} from "@/components/ui";
+} from "@/components/kit";
 
 export default function SprintsPage() {
   const { projectId } = useParams<{ projectId: string }>();

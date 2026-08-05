@@ -8,7 +8,7 @@ import { api } from "@/lib/api";
 import { useList, useProjectRole } from "@/lib/hooks";
 import type { Board, BoardColumnGroup, BoardItem } from "@/lib/types";
 import { BoardCanvas } from "@/components/board";
-import { Empty, ErrorNote, Loading, PageHead } from "@/components/ui";
+import { Empty, ErrorNote, Loading, PageHead } from "@/components/kit";
 import { NewIssueButton } from "@/components/new-issue";
 
 function BoardView() {

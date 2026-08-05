@@ -17,7 +17,7 @@ import {
   Modal,
   PageHead,
   Section,
-} from "@/components/ui";
+} from "@/components/kit";
 
 export default function OrgPage() {
   const { orgId } = useParams<{ orgId: string }>();

@@ -27,7 +27,7 @@ import {
   Loading,
   Modal,
   PageHead,
-} from "@/components/ui";
+} from "@/components/kit";
 import {
   SettingsTabs,
   projectSettingsTabs,

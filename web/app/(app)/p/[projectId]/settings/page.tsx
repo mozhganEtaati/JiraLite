@@ -19,7 +19,7 @@ import {
   Loading,
   PageHead,
   Section,
-} from "@/components/ui";
+} from "@/components/kit";
 
 export default function ProjectSettingsPage() {
   const { projectId } = useParams<{ projectId: string }>();

@@ -36,7 +36,7 @@ import {
   LoadMore,
   PageHead,
   Section,
-} from "@/components/ui";
+} from "@/components/kit";
 
 export default function IssuePage() {
   const { issueId } = useParams<{ issueId: string }>();

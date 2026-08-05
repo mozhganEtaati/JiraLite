@@ -24,7 +24,7 @@ import {
   LoadMore,
   Modal,
   PageHead,
-} from "@/components/ui";
+} from "@/components/kit";
 
 export default function SprintPage() {
   const { projectId, sprintId } = useParams<{

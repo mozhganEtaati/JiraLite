@@ -21,7 +21,7 @@ import {
   SprintStatusChip,
   TypeMark,
 } from "@/components/marks";
-import { Empty, Loading, PageHead, Section } from "@/components/ui";
+import { Empty, Loading, PageHead, Section } from "@/components/kit";
 import { NewIssueButton } from "@/components/new-issue";
 
 export default function ProjectOverviewPage() {

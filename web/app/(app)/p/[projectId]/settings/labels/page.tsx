@@ -11,7 +11,7 @@ import {
   SettingsTabs,
   projectSettingsTabs,
 } from "@/components/settings-tabs";
-import { Empty, ErrorNote, Field, Loading, PageHead } from "@/components/ui";
+import { Empty, ErrorNote, Field, Loading, PageHead } from "@/components/kit";
 
 const SWATCHES = [
   "#253C78",

@@ -27,7 +27,7 @@ import {
   LoadMore,
   PageHead,
   Section,
-} from "@/components/ui";
+} from "@/components/kit";
 import { NewIssueButton } from "@/components/new-issue";
 
 export default function BacklogPage() {

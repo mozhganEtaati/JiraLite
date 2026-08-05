@@ -19,7 +19,7 @@ import {
   Loading,
   Modal,
   PageHead,
-} from "@/components/ui";
+} from "@/components/kit";
 
 export default function BoardsPage() {
   const { projectId } = useParams<{ projectId: string }>();

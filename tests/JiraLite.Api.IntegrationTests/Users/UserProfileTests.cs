@@ -59,6 +59,11 @@ public class UserProfileTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifetim
         var firstUrl = (await first.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("avatarUrl").GetString();
         Assert.False(string.IsNullOrWhiteSpace(firstUrl));
 
+        // The URL is stored, so it must not carry the host of whoever uploaded it: an
+        // absolute one built from Scheme/Host strands every row when the host changes,
+        // and lets a forged Host header be persisted and served on to other people.
+        Assert.StartsWith("/files/", firstUrl);
+
         string firstStorageKey;
         using (var scope = _factory.Services.CreateScope())
         {

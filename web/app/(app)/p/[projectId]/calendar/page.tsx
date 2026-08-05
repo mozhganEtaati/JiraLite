@@ -7,7 +7,7 @@ import { useList } from "@/lib/hooks";
 import { cx, fromUtc, fullDate } from "@/lib/format";
 import type { DueDateEntry, TimelineSprint } from "@/lib/types";
 import { IssueKey, SprintStatusChip, TypeMark } from "@/components/marks";
-import { Empty, Loading, PageHead, Section } from "@/components/ui";
+import { Empty, Loading, PageHead, Section } from "@/components/kit";
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 

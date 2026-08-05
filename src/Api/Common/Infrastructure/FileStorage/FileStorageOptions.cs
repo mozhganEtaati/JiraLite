@@ -8,8 +8,9 @@ public class FileStorageOptions
     public required string RootPath { get; init; }
 
     /// <summary>
-    /// Base URL to prefix storage keys with when building public URLs (e.g. "https://api.jiralite.local").
-    /// If empty, URLs are built relative to the current request.
+    /// Base URL to prefix storage keys with when building public URLs (e.g. "https://cdn.jiralite.local").
+    /// Leave empty unless files are served from a different origin than the API: the URLs built from it
+    /// are stored, so an absolute one only belongs here when that host is stable.
     /// </summary>
     public string PublicBaseUrl { get; init; } = "";
 }

@@ -2,7 +2,7 @@
 
 import { cx } from "@/lib/format";
 import { ApiError } from "@/lib/api";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /* ── page furniture ───────────────────────────────────────── */
 
@@ -18,13 +18,20 @@ export function PageHead({
   actions?: React.ReactNode;
 }) {
   return (
-    <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
-        {eyebrow && <div className="t-eyebrow mb-1.5">{eyebrow}</div>}
-        <h1 className="t-title truncate">{title}</h1>
-        {meta && <div className="t-meta mt-1.5">{meta}</div>}
+        {/* the node-and-hairline says what this screen sits inside */}
+        {eyebrow && <div className="path mb-2">{eyebrow}</div>}
+        <h1 className="t-display truncate">{title}</h1>
+        {meta && (
+          <p className="mt-2 max-w-[70ch] text-[13px] text-[var(--color-ink-soft)]">
+            {meta}
+          </p>
+        )}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && (
+        <div className="flex flex-wrap items-center gap-2">{actions}</div>
+      )}
     </header>
   );
 }
@@ -44,11 +51,12 @@ export function Section({
 }) {
   return (
     <section className={className}>
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 className="t-eyebrow flex items-center gap-2">
+      <div className="mb-2.5 flex items-center justify-between gap-3">
+        <h2 className="t-eyebrow flex items-baseline gap-2">
           {title}
+          {/* the count is data, so it is set in the data face */}
           {count !== undefined && (
-            <span className="t-num text-[11px] text-[var(--color-ink-faint)]">
+            <span className="t-num text-[12px] text-[var(--color-ink-faint)]">
               {count}
             </span>
           )}
@@ -89,7 +97,7 @@ export function Empty({
           y="3.5"
           width="27"
           height="27"
-          rx="2"
+          rx="4"
           fill="none"
           stroke="var(--color-rule)"
           strokeWidth="1.5"
@@ -99,9 +107,9 @@ export function Empty({
           y="7.5"
           width="27"
           height="27"
-          rx="2"
+          rx="4"
           fill="none"
-          stroke="var(--color-pink-soft)"
+          stroke="var(--color-blue-soft)"
           strokeWidth="1.5"
         />
       </svg>
@@ -173,6 +181,56 @@ export function Field({
         </span>
       ) : null}
     </label>
+  );
+}
+
+/**
+ * A password well with the reveal control inside it. Typing a password you
+ * cannot see is the most common way people lock themselves out, so the eye
+ * is always there — never a checkbox parked under the field.
+ */
+export function PasswordInput({
+  className,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement>) {
+  const [shown, setShown] = useState(false);
+  return (
+    <span className="field-inset block">
+      <input
+        {...props}
+        type={shown ? "text" : "password"}
+        className={cx("field", className)}
+      />
+      <button
+        type="button"
+        className="field-eye"
+        onClick={() => setShown((v) => !v)}
+        aria-label={shown ? "Hide password" : "Show password"}
+        aria-pressed={shown}
+      >
+        <EyeMark off={shown} />
+      </button>
+    </span>
+  );
+}
+
+function EyeMark({ off }: { off: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M1.2 8S3.6 3.6 8 3.6 14.8 8 14.8 8 12.4 12.4 8 12.4 1.2 8 1.2 8Z" />
+      <circle cx="8" cy="8" r="1.9" />
+      {off && <path d="M2.6 13.4 13.4 2.6" stroke="var(--color-pink)" />}
+    </svg>
   );
 }
 
