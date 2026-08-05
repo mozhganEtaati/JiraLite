@@ -14,6 +14,9 @@ services:
       # one place migrations may be applied on startup. Set here rather than inherited from
       # appsettings.Development.json, which .dockerignore keeps out of the image.
       Database__AutoMigrate: "true"
+      # spec/23-mcp-server.md NFR-05 — on for the local stack so the MCP surface can be exercised
+      # during development. Production stays default-off until a deployment enables it deliberately.
+      Mcp__Enabled: "true"
     volumes:
       - file-storage:/app/storage
     depends_on:

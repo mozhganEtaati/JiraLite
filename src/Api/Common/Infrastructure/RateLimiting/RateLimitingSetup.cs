@@ -124,8 +124,13 @@ public static class RateLimitingSetup
     private static RateLimitingOptions ResolveOptions(HttpContext context) =>
         context.RequestServices.GetRequiredService<IOptions<RateLimitingOptions>>().Value;
 
+    /// <summary>
+    /// `/api` plus `/mcp` (spec/23-mcp-server.md NFR-03) — every caller-facing surface. `/health`
+    /// and `/hangfire` are deliberately outside it.
+    /// </summary>
     private static bool IsApiPath(HttpContext context) =>
-        context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase);
+        context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
+        || context.Request.Path.StartsWithSegments("/mcp", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsAuthPath(HttpContext context) =>
         context.Request.Path.StartsWithSegments("/api/auth", StringComparison.OrdinalIgnoreCase);

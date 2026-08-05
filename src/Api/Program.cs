@@ -10,6 +10,7 @@ using JiraLite.Api.Common.Infrastructure.Email;
 using JiraLite.Api.Common.Infrastructure.FileStorage;
 using JiraLite.Api.Common.Infrastructure.Persistence;
 using JiraLite.Api.Common.Infrastructure.RateLimiting;
+using JiraLite.Api.Common.Mcp;
 using JiraLite.Api.Common.Notifications;
 using JiraLite.Api.Features.Admin;
 using JiraLite.Api.Features.Auth;
@@ -28,6 +29,7 @@ using JiraLite.Api.Features.Teams;
 using JiraLite.Api.Features.Users;
 using JiraLite.Api.Features.Workspaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -116,6 +118,11 @@ builder.Services.AddScoped<NotificationDispatcher>();
 builder.Services.AddOptions<InvitationOptions>()
     .Bind(builder.Configuration.GetSection(InvitationOptions.SectionName));
 
+// ---- MCP server (spec/23-mcp-server.md) ----
+builder.Services.AddOptions<McpOptions>()
+    .Bind(builder.Configuration.GetSection(McpOptions.SectionName));
+builder.Services.AddJiraLiteMcp();
+
 // ---- Rate limiting (spec/19-api-guidelines.md §13, spec/01-authentication.md NFR-04) ----
 builder.Services.AddJiraLiteRateLimiting(builder.Configuration);
 
@@ -134,8 +141,13 @@ builder.Services.AddProblemDetails(options =>
 // `jwtOptions` snapshot above) so it always matches the key JwtTokenService signs with — reading
 // builder.Configuration directly here would capture a stale value under WebApplicationFactory,
 // which layers in its own config (e.g. a test-only SigningKey) only once the host is actually built.
+// The Personal Access Token scheme is registered alongside the JWT one, never as a fallback for
+// it: `/api/*` authorizes against the default (JWT) scheme and `/mcp` against "Pat", so neither
+// credential type is accepted where the other belongs (spec/23-mcp-server.md BR-02).
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer();
+    .AddJwtBearer()
+    .AddScheme<AuthenticationSchemeOptions, PersonalAccessTokenHandler>(
+        PersonalAccessTokenDefaults.Scheme, configureOptions: null);
 
 builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
     .Configure<IOptions<JwtOptions>>((bearerOptions, boundJwtOptions) =>
@@ -327,6 +339,23 @@ UpdateNotificationPreferences.MapEndpoint(app);
 GetPublicProfile.MapEndpoint(app);
 DeactivateAccount.MapEndpoint(app);
 GetMyActivity.MapEndpoint(app);
+
+// Personal Access Tokens exist only to authenticate MCP clients, so they are mapped with the rest
+// of that surface — with Mcp:Enabled off there is no /mcp and no way to mint a credential for it,
+// and both 404 rather than existing and refusing (spec/23-mcp-server.md NFR-05).
+if (app.Services.IsMcpEnabled())
+{
+    CreateAccessToken.MapEndpoint(app);
+    ListAccessTokens.MapEndpoint(app);
+    RevokeAccessToken.MapEndpoint(app);
+
+    // Authorized against the "Pat" scheme only, so a JWT access token presented here is rejected
+    // just as a Personal Access Token is rejected by /api/* (BR-02).
+    app.MapMcp("/mcp")
+        .RequireAuthorization(new AuthorizationPolicyBuilder(PersonalAccessTokenDefaults.Scheme)
+            .RequireAuthenticatedUser()
+            .Build());
+}
 
 CreateOrganization.MapEndpoint(app);
 ListMyOrganizations.MapEndpoint(app);

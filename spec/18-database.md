@@ -50,6 +50,22 @@ Purpose: session renewal credential, rotated on use.
 
 Index: (`UserId`, `RevokedAtUtc`) for active-token lookups.
 
+### PersonalAccessToken
+Purpose: long-lived machine credential for MCP clients, which cannot participate in the access/refresh exchange ([23-mcp-server.md](23-mcp-server.md) BR-02). Not interchangeable with `RefreshToken` or a JWT access token.
+
+| Column | Type | Nullable | Notes |
+|---|---|---|---|
+| Id | Guid | No | PK |
+| UserId | Guid | No | FK → User, `ON DELETE CASCADE` (owned by User aggregate) |
+| Name | string(100) | No | User-supplied label |
+| TokenHash | string(128) | No | SHA-256 hash, unique |
+| CreatedAtUtc | datetime2 | No | |
+| ExpiresAtUtc | datetime2 | No | ≤ 365 days after creation ([23-mcp-server.md](23-mcp-server.md) BR-03) |
+| LastUsedAtUtc | datetime2 | Yes | Null until first use |
+| RevokedAtUtc | datetime2 | Yes | |
+
+Indexes: unique (`TokenHash`) for authentication lookup; (`UserId`, `RevokedAtUtc`) for the active-token list and count.
+
 ### UserProfile
 Purpose: display identity.
 
@@ -356,7 +372,7 @@ No audit fields (pure join table — §2).
 
 See [00-project-overview.md](00-project-overview.md) §7–8 for the narrative version. In FK direction:
 
-`RefreshToken/UserProfile/NotificationPreference/Notification → User` · `Workspace → Organization` · `WorkspaceMember/Invitation/Team/Project → Workspace` · `TeamMember → Team` · `ProjectMember/Board/Label → Project` · `BoardColumn → Board` · `Sprint → Board, Project` · `Issue → Project, BoardColumn, Sprint(0..1), Issue(0..1, self)` · `Comment/Attachment → Issue` · `IssueLabel → Issue, Label` · `ActivityLogEntry → User, Workspace, Project(0..1)`
+`RefreshToken/PersonalAccessToken/UserProfile/NotificationPreference/Notification → User` · `Workspace → Organization` · `WorkspaceMember/Invitation/Team/Project → Workspace` · `TeamMember → Team` · `ProjectMember/Board/Label → Project` · `BoardColumn → Board` · `Sprint → Board, Project` · `Issue → Project, BoardColumn, Sprint(0..1), Issue(0..1, self)` · `Comment/Attachment → Issue` · `IssueLabel → Issue, Label` · `ActivityLogEntry → User, Workspace, Project(0..1)`
 
 ## 9. Why Some Owning Relationships Use `NO ACTION` Instead of `CASCADE`
 

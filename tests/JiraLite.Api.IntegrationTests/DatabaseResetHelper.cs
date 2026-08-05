@@ -14,7 +14,7 @@ public static class DatabaseResetHelper
         "ProjectMember", "Project",
         "TeamMember", "Team",
         "Invitation", "WorkspaceMember", "Workspace", "Organization",
-        "RefreshToken", "NotificationPreference", "UserProfile", "User"
+        "RefreshToken", "PersonalAccessToken", "NotificationPreference", "UserProfile", "User"
     ];
 
     public static async Task ResetAsync(JiraLiteDbContext db)
