@@ -339,10 +339,12 @@ function IssueDetail({
               )}
             </Row>
 
+            {/* Story points, not hours — spec/09-issues.md §82. Spelled out because "pts"
+                on its own reads like a time unit. */}
             <Row label="Estimate">
               <span className="t-num text-[13px]">
                 {issue.estimate ?? "—"}
-                {issue.estimate ? " pts" : ""}
+                {issue.estimate ? " story points" : ""}
               </span>
             </Row>
 
