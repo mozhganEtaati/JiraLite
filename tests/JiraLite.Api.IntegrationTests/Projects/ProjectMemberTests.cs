@@ -68,4 +68,33 @@ public class ProjectMemberTests : IClassFixture<JiraLiteApiFactory>, IAsyncLifet
         var listBody = await listResponse.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Single(listBody.GetProperty("items").EnumerateArray());
     }
+
+    /// <summary>
+    /// spec/19-api-guidelines.md §7 — a member list has to name the people in it. The assertion
+    /// above only counts rows, so the endpoint returning a bare UserId went unnoticed until the
+    /// assignee picker rendered a list of blank options.
+    /// </summary>
+    [Fact]
+    public async Task Listing_project_members_returns_their_user_summary()
+    {
+        var client = _factory.CreateClient();
+        var admin = await TestDataHelper.RegisterAndLoginAsync(client);
+        // CreateProjectAsync is what authenticates the client, so the rename has to follow it.
+        var seeded = await TestDataHelper.CreateProjectAsync(client, admin.AccessToken);
+        (await client.PatchAsJsonAsync("/api/users/me", new { displayName = "Ada Lovelace" })).EnsureSuccessStatusCode();
+
+        var response = await client.GetAsync($"/api/projects/{seeded.ProjectId}/members");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var member = (await response.Content.ReadFromJsonAsync<JsonElement>())
+            .GetProperty("items").EnumerateArray().Single();
+
+        Assert.Equal(admin.UserId, member.GetProperty("userId").GetGuid());
+        Assert.Equal("Ada Lovelace", member.GetProperty("displayName").GetString());
+        Assert.Equal("ProjectAdmin", member.GetProperty("role").GetString());
+        Assert.True(member.TryGetProperty("avatarUrl", out _));
+        // The web client reads joinedAtUtc; createdAtUtc would silently render "Invalid Date".
+        Assert.True(member.TryGetProperty("joinedAtUtc", out var joined));
+        Assert.NotEqual(default, joined.GetDateTime());
+    }
 }
