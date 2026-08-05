@@ -58,6 +58,12 @@ Rate limiting (`RateLimiting__*`, defaults 300 req/min per user and 10 req/min p
 `/api/auth/*`) and invitation expiry (`Invitations__ExpiryDays`, 7) are left at their
 `appsettings.json` values unless a deployment overrides them.
 
+`Mcp__Enabled` (default `false`) controls the MCP surface — the `/mcp` endpoint and the personal
+access token endpoints under `/api/users/me/tokens`. With it unset, none of those routes exists and
+the deployment behaves exactly as it did before Phase 8. Turning it on lets users mint long-lived
+credentials that an AI client can use to read and write issues as them; see
+[mcp-client-setup.md](mcp-client-setup.md), and the operational note in §8.
+
 Keep the variables in a root-owned `.env` beside the compose file, mode `600`. It is **not** in
 version control and must not be.
 
@@ -210,6 +216,12 @@ them, not as a to-do list.
 - **No zero-downtime path.** `up -d api` replaces the container; there is a short outage. Combined
   with the single-volume file storage above, running two replicas behind a load balancer is not
   currently supported.
+- **Personal access tokens have no operator-side kill switch.** A user revokes their own token via
+  `DELETE /api/users/me/tokens/{tokenId}`; there is no admin endpoint to revoke someone else's. If
+  a token is known to be compromised and its owner is unavailable, the options are deactivating
+  that user (which stops all of their tokens at once), setting `Mcp__Enabled=false` and
+  redeploying (which takes the whole surface down), or a manual `UPDATE` against
+  `PersonalAccessToken`. Worth deciding which of those is acceptable **before** enabling MCP.
 - **The SA account is used for the application connection.** The in-stack SQL Server is reachable
   only from the Compose network, but a dedicated least-privilege login is the correct fix and does
   not exist yet.
@@ -221,3 +233,5 @@ them, not as a to-do list.
 - [spec/21-roadmap.md](../spec/21-roadmap.md) §9 — Phase 7 scope
 - [docs/plans/2026-08-01-phase-7-hardening.md](plans/2026-08-01-phase-7-hardening.md) — the plan
   these deployment artifacts came from
+- [spec/23-mcp-server.md](../spec/23-mcp-server.md) — the MCP surface `Mcp__Enabled` controls
+- [docs/mcp-client-setup.md](mcp-client-setup.md) — what a user does once it is enabled

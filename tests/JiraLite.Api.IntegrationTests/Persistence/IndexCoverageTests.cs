@@ -33,6 +33,9 @@ public class IndexCoverageTests : IClassFixture<JiraLiteApiFactory>
         { "Notification", ["RecipientUserId", "IsRead", "CreatedAtUtc"], false },
         // §RefreshToken
         { "RefreshToken", ["UserId", "RevokedAtUtc"], false },
+        // §PersonalAccessToken — the unique hash index carries every /mcp request's authentication
+        { "PersonalAccessToken", ["TokenHash"], true },
+        { "PersonalAccessToken", ["UserId", "RevokedAtUtc"], false },
         // §User / §Invitation — single-column, but uniqueness is the business rule
         { "User", ["Email"], true },
         { "Invitation", ["Token"], true }

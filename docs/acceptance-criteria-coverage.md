@@ -191,16 +191,37 @@ covered, or covered by something narrower than it sounds, that is stated in the 
 | 3 | Non-Admin gets 403 on every endpoint in the document | `AdminEndpointsTests.Nonadmin_is_rejected_with_403_on_every_admin_endpoint` |
 | 4 | Roles catalog identical across Workspaces (BR-03) | `AdminEndpointsTests.Role_catalog_is_identical_across_two_different_workspaces` |
 
+## 23 — MCP Server
+
+Added in Phase 8, after T048's 01–17 sweep. Listed here so the coverage picture stays complete.
+
+| # | Criterion | Covered by |
+|---|---|---|
+| 1 | Plaintext token in the 201 only, never in a later list | `Users/AccessTokenTests.The_plaintext_value_is_returned_once_at_creation_and_never_again` (+ `Only_the_hash_is_persisted`) |
+| 2 | Advertised tool list matches §14; nothing excluded appears | `Mcp/McpReadToolTests.The_advertised_tool_list_matches_the_specification_exactly` + `No_destructive_or_administrative_tool_is_advertised` |
+| 3 | `move_issue` as Developer: column changes, activity written, assignee+reporter notified | `Mcp/McpWriteToolTests.Move_issue_changes_the_column_logs_activity_and_notifies_the_assignee_and_reporter` |
+| 4 | Every write tool refused for a Viewer, no state change | `McpWriteToolTests.Every_write_tool_is_refused_for_a_viewer_and_nothing_changes` |
+| 5 | Demotion after token issuance takes effect (BR-01) | `McpWriteToolTests.A_user_demoted_after_the_token_was_issued_loses_write_access_with_that_same_token` |
+| 6 | Revoked token rejected with 401, no tool runs | `Auth/PersonalAccessTokenAuthTests.A_revoked_token_stops_working_immediately` |
+| 7 | PAT rejected by `/api/*` (BR-02) | `PersonalAccessTokenAuthTests.A_personal_access_token_is_rejected_by_the_rest_api` |
+| 8 | JWT rejected by `/mcp` (BR-02) | `PersonalAccessTokenAuthTests.A_jwt_access_token_is_rejected_by_the_mcp_endpoint` |
+| 9 | 11th active token 409s, existing 10 survive (BR-05) | `AccessTokenTests.An_eleventh_active_token_is_rejected_and_the_existing_ten_survive` |
+| 10 | Deactivated owner's tokens stop authenticating (BR-07) | `PersonalAccessTokenAuthTests.A_deactivated_owners_tokens_stop_working_without_being_revoked` |
+| 11 | `Mcp:Enabled=false` ⇒ `/mcp` 404s, rest of API unchanged | `Mcp/McpDisabledTests` (all three) |
+
 ---
 
 ## Regression run
 
-The whole suite, against the final Phase 7 code:
+The whole suite, against the final Phase 8 code:
 
 ```
 dotnet test JiraLite.slnx
-Passed!  -  Failed: 0,  Passed: 229,  Skipped: 0,  Total: 229,  Duration: 1 m 56 s
+Passed!  -  Failed: 0,  Passed: 264,  Skipped: 0,  Total: 264,  Duration: 3 m 34 s
 ```
+
+The Phase 7 baseline was 229; Phase 8 added 35 (33 MCP/token tests plus two `PersonalAccessToken`
+index rows in `IndexCoverageTests`).
 
 Integration tests only — there is no separate unit-test project. Every test runs against a real
 SQL Server in a Testcontainers container, migrated by the same EF migrations the production image
