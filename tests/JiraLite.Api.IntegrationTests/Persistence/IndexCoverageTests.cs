@@ -36,6 +36,9 @@ public class IndexCoverageTests : IClassFixture<JiraLiteApiFactory>
         // §PersonalAccessToken — the unique hash index carries every /mcp request's authentication
         { "PersonalAccessToken", ["TokenHash"], true },
         { "PersonalAccessToken", ["UserId", "RevokedAtUtc"], false },
+        // §PasswordResetToken — the unique hash index is the redemption lookup
+        { "PasswordResetToken", ["TokenHash"], true },
+        { "PasswordResetToken", ["UserId", "UsedAtUtc"], false },
         // §User / §Invitation — single-column, but uniqueness is the business rule
         { "User", ["Email"], true },
         { "Invitation", ["Token"], true }

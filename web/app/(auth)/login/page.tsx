@@ -12,6 +12,10 @@ function SignInForm() {
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next");
+  // Set by the reset screen on its way here. The reset revokes every session,
+  // so there is nowhere to send them but back to this form — saying why keeps
+  // that from reading as the reset having failed.
+  const justReset = params.get("reset") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,6 +51,12 @@ function SignInForm() {
     <>
       <h1 className="auth-title">Log in</h1>
 
+      {justReset && (
+        <p className="auth-note" role="status">
+          Your password has been changed. Log in with the new one.
+        </p>
+      )}
+
       <form onSubmit={onSubmit} className="auth-form" noValidate>
         <Field label="E-mail" error={fieldError?.field("email")}>
           <input
@@ -76,17 +86,9 @@ function SignInForm() {
             />
           </Field>
 
-          <button
-            type="button"
-            className="auth-hint"
-            onClick={() =>
-              setNote(
-                "Password reset is not wired up yet — a workspace admin can set a new one for you.",
-              )
-            }
-          >
+          <Link href="/forgot-password" className="auth-hint">
             Forgot the password
-          </button>
+          </Link>
         </div>
 
         {message && !fieldError?.errors && (
