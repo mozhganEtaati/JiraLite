@@ -48,6 +48,7 @@ Documents are numbered in dependency order — each one assumes the concepts def
 | 20 | [Coding Guidelines](20-coding-guidelines.md) | Folder structure, naming, DTOs, validation, logging, DI, config, migrations |
 | 21 | [Roadmap](21-roadmap.md) | Phased delivery plan |
 | 22 | [Tasks](22-tasks.md) | Implementation task breakdown |
+| 23 | [MCP Server](23-mcp-server.md) | Model Context Protocol tool surface, Personal Access Tokens |
 
 ## Domain Model Summary
 

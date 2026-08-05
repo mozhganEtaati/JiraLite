@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-Task-level breakdown of the eight phases in [21-roadmap.md](21-roadmap.md). Each task has a unique ID, description, difficulty (S/M/L), dependencies on other task IDs, and acceptance criteria — pointing back to the relevant feature document's own §15 Acceptance Criteria rather than restating it, per the "reference, don't duplicate" rule used throughout this specification.
+Task-level breakdown of the nine phases in [21-roadmap.md](21-roadmap.md). Each task has a unique ID, description, difficulty (S/M/L), dependencies on other task IDs, and acceptance criteria — pointing back to the relevant feature document's own §15 Acceptance Criteria rather than restating it, per the "reference, don't duplicate" rule used throughout this specification.
 
 ## 2. Phase 0 — Foundations & Infrastructure
 
@@ -100,7 +100,20 @@ Note on ordering: as in Phase 2, T028 (Project-scoped authorization policies) is
 | T048 | Full regression pass against every feature document's acceptance criteria ([01](01-authentication.md)–[17](17-admin.md)) | L | All prior tasks | Every §15 acceptance-criteria bullet across 01–17 verified |
 | T049 | Write the deployment runbook | S | T047 | Runbook covers deploy, rollback, and migration-application steps |
 
-## 10. Related Documents
+## 10. Phase 8 — MCP Server
+
+Note on ordering: T052 (the Personal Access Token authentication scheme) is sequenced before both tool tasks because their acceptance criteria are authorization criteria — a Viewer being refused, a demoted user being refused — none of which can be demonstrated until the credential they authorize against exists. T054 follows T053 rather than running beside it so the read surface proves the host wiring before any tool can mutate state.
+
+| ID | Description | Difficulty | Dependencies | Acceptance Criteria |
+|---|---|---|---|---|
+| T050 | `PersonalAccessToken` entity + migration | S | T008 | Matches [23-mcp-server.md](23-mcp-server.md) §7; token value never persisted in plaintext (NFR-01) |
+| T051 | Token management endpoints (create/list/revoke) | M | T050 | [23-mcp-server.md](23-mcp-server.md) §15 token criteria |
+| T052 | Personal Access Token authentication scheme, separate from JWT | M | T051, T045 | [23](23-mcp-server.md) §15 credential-separation and revocation criteria (BR-02, BR-04, BR-07) |
+| T053 | MCP server host + read tools | L | T052, T030, T026, T027, T034, T042 | [23](23-mcp-server.md) §15 tool-list and read criteria; no excluded tool advertised (BR-06) |
+| T054 | MCP write tools | M | T053, T031, T039 | [23](23-mcp-server.md) §15 write, refusal, and fresh-role-resolution criteria (BR-01) |
+| T055 | Client setup documentation + real-client verification | S | T054, T049 | A real MCP client connects, reads, and moves an Issue; runbook covers the flag and revocation |
+
+## 11. Related Documents
 
 - [21-roadmap.md](21-roadmap.md) — the phase-level plan this task list implements
 - [README.md](README.md) — full specification index

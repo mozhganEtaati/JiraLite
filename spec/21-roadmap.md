@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-Eight sequential phases, each building only on entities and endpoints delivered by earlier phases — the same dependency logic used in [00-project-overview.md](00-project-overview.md)'s bounded contexts. No phase implements a feature whose prerequisites aren't already in place (e.g., Issues aren't built before Boards exist, since every Issue requires a `BoardColumnId`). Task-level breakdown of each phase is in [22-tasks.md](22-tasks.md).
+Nine sequential phases, each building only on entities and endpoints delivered by earlier phases — the same dependency logic used in [00-project-overview.md](00-project-overview.md)'s bounded contexts. No phase implements a feature whose prerequisites aren't already in place (e.g., Issues aren't built before Boards exist, since every Issue requires a `BoardColumnId`). Task-level breakdown of each phase is in [22-tasks.md](22-tasks.md).
 
 ## 2. Phase 0 — Foundations & Infrastructure
 
@@ -110,6 +110,18 @@ Eight sequential phases, each building only on entities and endpoints delivered 
 
 **Definition of Done:** A full regression pass across all acceptance criteria in [01](01-authentication.md)–[17](17-admin.md) succeeds; the production Docker image builds and runs the full stack; a deployment runbook exists.
 
-## 10. Related Documents
+## 10. Phase 8 — MCP Server
+
+**Goals:** Make JiraLite drivable from an AI client (Claude Code, Claude Desktop, VS Code) without building a client UI and without widening the authorization model.
+
+**Deliverables:** `PersonalAccessToken` entity/migration and its management endpoints; a Personal Access Token authentication scheme distinct from the JWT scheme ([23-mcp-server.md](23-mcp-server.md) BR-02); an MCP endpoint at `/mcp` exposing the read and write tools in [23-mcp-server.md](23-mcp-server.md) §14, each delegating to a slice built in Phases 1–6; client setup documentation.
+
+**Dependencies:** Phases 0–7 complete. The tool surface is an adapter over existing slices — it cannot precede them, and it deliberately follows Phase 7 so the rate limiting and deployment story it relies on already exist.
+
+**Definition of Ready:** [23-mcp-server.md](23-mcp-server.md) approved, including the §14 tool surface and the BR-06 exclusions.
+
+**Definition of Done:** All acceptance criteria in [23-mcp-server.md](23-mcp-server.md) §15 pass; a real MCP client connects, reads issues, and moves one, with the change and its notification visible through the HTTP API; the existing suite is unaffected with `Mcp:Enabled = false`.
+
+## 11. Related Documents
 
 - [22-tasks.md](22-tasks.md) — task-level breakdown of each phase above
