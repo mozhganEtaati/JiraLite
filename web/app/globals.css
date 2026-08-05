@@ -443,6 +443,13 @@ select.field {
   padding-inline-end: 2.625rem;
 }
 
+/* Edge and Chrome on Windows draw their own reveal/clear controls inside
+   password inputs; ours already sits there, so drop theirs. */
+.field-inset .field::-ms-reveal,
+.field-inset .field::-ms-clear {
+  display: none;
+}
+
 .field-eye {
   position: absolute;
   right: 0.375rem;
