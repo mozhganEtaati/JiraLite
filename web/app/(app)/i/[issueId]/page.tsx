@@ -6,12 +6,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { api, fetchBlobUrl } from "@/lib/api";
 import { useCursorList, useList, useProjectRole } from "@/lib/hooks";
-import { ago, cx, fileSize, fullDate } from "@/lib/format";
+import { ago, cx, fileSize } from "@/lib/format";
 import { useSession } from "@/lib/providers";
 import { PRIORITIES } from "@/lib/types";
 import type {
   Attachment,
-  BoardItem,
   Comment,
   Issue,
   Label,
