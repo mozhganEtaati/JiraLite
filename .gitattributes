@@ -1,0 +1,20 @@
+# Normalise line endings so a Windows checkout does not show whole files as
+# modified. Without this, git warned "LF will be replaced by CRLF" on every
+# newly added file.
+* text=auto eol=lf
+
+# Windows-only tooling that expects CRLF.
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binary: never touch these.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.pdf binary

@@ -39,7 +39,7 @@ public class WriteTools(
         [Description("Issue type: Epic, Story, Task, Bug, or Subtask. A Subtask requires parentIssueId.")] string type,
         [Description("Short summary, at most 255 characters.")] string title,
         [Description("Optional longer description.")] string? description = null,
-        [Description("Priority: Lowest, Low, Medium, High, or Highest. Defaults to Medium.")] string? priority = null,
+        [Description("Priority: Low, Medium, High, or Critical. Defaults to Medium.")] string? priority = null,
         [Description("Parent issue id (GUID) — required for a Subtask, and used to place a Story/Task/Bug under an Epic.")] Guid? parentIssueId = null,
         [Description("Assignee user id (GUID). Must already be a member of the project.")] Guid? assigneeUserId = null,
         [Description("Estimate in story points, 0-999.99.")] decimal? estimate = null,
@@ -58,7 +58,7 @@ public class WriteTools(
         [Description("The issue id (GUID).")] Guid issueId,
         [Description("New title, at most 255 characters.")] string? title = null,
         [Description("New description.")] string? description = null,
-        [Description("New priority: Lowest, Low, Medium, High, or Highest.")] string? priority = null,
+        [Description("New priority: Low, Medium, High, or Critical.")] string? priority = null,
         [Description("New assignee user id (GUID). Must be a member of the project.")] Guid? assigneeUserId = null,
         [Description("New estimate in story points, 0-999.99.")] decimal? estimate = null,
         CancellationToken cancellationToken = default)

@@ -6,12 +6,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { api, fetchBlobUrl } from "@/lib/api";
 import { useCursorList, useList, useProjectRole } from "@/lib/hooks";
-import { ago, cx, fileSize, fullDate } from "@/lib/format";
+import { ago, cx, fileSize } from "@/lib/format";
 import { useSession } from "@/lib/providers";
 import { PRIORITIES } from "@/lib/types";
 import type {
   Attachment,
-  BoardItem,
   Comment,
   Issue,
   Label,
@@ -339,10 +338,12 @@ function IssueDetail({
               )}
             </Row>
 
+            {/* Story points, not hours — spec/09-issues.md §82. Spelled out because "pts"
+                on its own reads like a time unit. */}
             <Row label="Estimate">
               <span className="t-num text-[13px]">
                 {issue.estimate ?? "—"}
-                {issue.estimate ? " pts" : ""}
+                {issue.estimate ? " story points" : ""}
               </span>
             </Row>
 
