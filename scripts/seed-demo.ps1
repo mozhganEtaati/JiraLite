@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-    Seeds JiraLite with demo data: a workspace, three projects, a team of five,
-    and 33 realistic issues with comments, sprints and labels.
+    Seeds JiraLite with demo data: a workspace of five people, three teams,
+    three projects, and 33 realistic issues with comments, sprints and labels.
 
 .DESCRIPTION
     Everything goes through the public HTTP API, so the data is exactly what a
@@ -11,10 +11,13 @@
     The one exception is invitation tokens, which the API deliberately never
     returns (they are credentials), so those are read from SQL Server.
 
-    Re-running appends a fresh workspace rather than reconciling with what is
-    already there, and deletes the projects the previous run left behind. If
-    that delete fails the script prints a warning rather than quietly leaving
-    duplicates on the dashboard; `docker compose down -v` gives a clean slate.
+    Re-running reuses the same Organization and Workspace by name and replaces
+    the projects inside it. It deliberately does not create a new Workspace per
+    run: there is no delete-Workspace endpoint and archiving is irreversible, so
+    that would leave a growing pile of empty Workspaces - and the web client
+    selects workspaces[0] when nothing is remembered, which would land the demo
+    on an empty one. If clearing the old projects fails the script warns rather
+    than quietly leaving duplicates; `docker compose down -v` gives a clean slate.
 
 .EXAMPLE
     pwsh ./scripts/seed-demo.ps1
@@ -130,14 +133,19 @@ function Get-InvitationToken {
     ($raw | Where-Object { $_ -and $_.Trim() } | Select-Object -First 1).Trim()
 }
 
-function Add-TeamMember {
+function Add-WorkspaceMember {
     param($Admin, [string]$WorkspaceId, $Member, [string]$WorkspaceRole = "Member")
+
+    # The Workspace is reused across runs, so most of the time everyone is already in it.
+    $existing = (Invoke-Api GET "/api/workspaces/$WorkspaceId/members" -Token $Admin.Token).items
+    if ($existing | Where-Object { $_.userId -eq $Member.Id }) { return $false }
 
     Invoke-Api POST "/api/workspaces/$WorkspaceId/invitations" `
         @{ email = $Member.Email; role = $WorkspaceRole } -Token $Admin.Token | Out-Null
 
     $token = Get-InvitationToken -WorkspaceId $WorkspaceId -Email $Member.Email
     Invoke-Api POST "/api/invitations/$token/accept" -Token $Member.Token | Out-Null
+    return $true
 }
 
 function Get-Board {
@@ -225,17 +233,64 @@ if ($stuck -gt 0) {
     Write-Host "    docker compose down -v; docker compose up -d" -ForegroundColor Yellow
 }
 
-$stamp = Get-Date -Format "MMdd-HHmm"
-$org = Invoke-Api POST "/api/organizations" @{ name = "Acme Product Group" } -Token $demo.Token
-$workspace = Invoke-Api POST "/api/organizations/$($org.id)/workspaces" `
-    @{ name = "Product Engineering $stamp" } -Token $demo.Token
-$workspaceId = $workspace.id
-Write-Step "$($workspace.name)"
+# Reuse the Organization and Workspace by name instead of stamping a new one each run.
+# There is no delete-Workspace endpoint and archiving is irreversible, so a fresh Workspace
+# per run piles up empty leftovers - and the web client selects workspaces[0] when nothing is
+# remembered (web/components/shell.tsx), which lands the demo on an empty one.
+$orgName = "Acme Product Group"
+$workspaceName = "Product Engineering"
 
-foreach ($person in $team) {
-    Add-TeamMember -Admin $demo -WorkspaceId $workspaceId -Member $person
+$org = (Invoke-Api GET "/api/organizations" -Token $demo.Token).items | Where-Object { $_.name -eq $orgName } | Select-Object -First 1
+if (-not $org) {
+    $org = Invoke-Api POST "/api/organizations" @{ name = $orgName } -Token $demo.Token
 }
-Write-Step "$($team.Count) members invited and joined"
+
+$workspace = (Invoke-Api GET "/api/workspaces" -Token $demo.Token).items | Where-Object { $_.name -eq $workspaceName } | Select-Object -First 1
+if (-not $workspace) {
+    $workspace = Invoke-Api POST "/api/organizations/$($org.id)/workspaces" `
+        @{ name = $workspaceName } -Token $demo.Token
+    Write-Step "$($workspace.name) (created)"
+} else {
+    Write-Step "$($workspace.name) (reused)"
+}
+$workspaceId = $workspace.id
+
+$joined = 0
+foreach ($person in $team) {
+    if (Add-WorkspaceMember -Admin $demo -WorkspaceId $workspaceId -Member $person) { $joined++ }
+}
+Write-Step "$($team.Count) members in the workspace ($joined newly invited)"
+
+# ---------- teams ----------
+
+Write-Host "Teams" -ForegroundColor White
+
+# Teams are Workspace-scoped and independent of Project membership (spec/04-teams.md), so they
+# are seeded separately rather than derived from the Project rosters below.
+$teamSpecs = @(
+    @{ Name = "Platform";  Description = "Backend services, APIs and infrastructure."; Lead = $alice; Members = @($alice, $ben) }
+    @{ Name = "Mobile";    Description = "iOS and Android clients.";                   Lead = $ben;   Members = @($ben, $chloe) }
+    @{ Name = "Design";    Description = "Design system, UX research and accessibility."; Lead = $chloe; Members = @($chloe, $diego, $demo) }
+)
+
+$existingTeams = (Invoke-Api GET "/api/workspaces/$workspaceId/teams" -Token $demo.Token).items
+foreach ($spec in $teamSpecs) {
+    $team_ = $existingTeams | Where-Object { $_.name -eq $spec.Name } | Select-Object -First 1
+    if (-not $team_) {
+        $team_ = Invoke-Api POST "/api/workspaces/$workspaceId/teams" `
+            @{ name = $spec.Name; description = $spec.Description } -Token $demo.Token
+    }
+
+    foreach ($person in $spec.Members) {
+        try {
+            Invoke-Api POST "/api/teams/$($team_.id)/members" @{ userId = $person.Id } -Token $demo.Token | Out-Null
+        } catch { }  # already a member on a re-run
+    }
+    Invoke-Api PATCH "/api/teams/$($team_.id)/members/$($spec.Lead.Id)" `
+        @{ isLead = $true } -Token $demo.Token | Out-Null
+
+    Write-Step "$($spec.Name) - $($spec.Members.Count) members, lead $($names[$spec.Lead.Email])"
+}
 
 # ---------- projects ----------
 
