@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useCursorList } from "@/lib/hooks";
+import { useCursorList, useMyStats } from "@/lib/hooks";
 import { useSession } from "@/lib/providers";
 import { ago, cx } from "@/lib/format";
 import type { FeedEntry, MyProject, MyTask } from "@/lib/types";
@@ -13,11 +13,23 @@ import {
   PriorityMark,
   TypeMark,
 } from "@/components/marks";
+import {
+  ActivityStreak,
+  PriorityBars,
+  StatRow,
+  StatusStrip,
+} from "@/components/charts";
 import { Empty, ErrorNote, Loading, LoadMore, PageHead, Section } from "@/components/kit";
+
+/** The two windows worth offering: a fortnight reads day by day, a month reads as a trend. */
+const WINDOWS = [14, 30];
 
 export default function DashboardPage() {
   const { me } = useSession();
   const [includeDone, setIncludeDone] = useState(false);
+  const [days, setDays] = useState(WINDOWS[0]);
+
+  const stats = useMyStats(days);
 
   const tasks = useCursorList<MyTask>(
     ["my-tasks"],
@@ -55,6 +67,73 @@ export default function DashboardPage() {
           </label>
         }
       />
+
+      {stats.error ? (
+        <ErrorNote error={stats.error} className="mb-6" />
+      ) : !stats.data ? (
+        <div className="card mb-6">
+          <Loading label="Counting your work" />
+        </div>
+      ) : (
+        /*
+         * One plate, divided by hairlines — the same way the rest of the screen
+         * gets its structure. Four separate cards left the two columns heading
+         * at different heights and a hole under the shorter one.
+         */
+        <section className="card mb-6 overflow-hidden">
+          <StatRow totals={stats.data.totals} />
+
+          <div className="grid lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,1fr)]">
+            <div className="flex flex-col p-4">
+              <header className="mb-3.5 flex items-baseline justify-between gap-3">
+                <h2 className="t-eyebrow">What you did</h2>
+                <div
+                  role="group"
+                  aria-label="Activity window"
+                  className="flex items-baseline gap-2 text-[12px]"
+                >
+                  {WINDOWS.map((n, i) => (
+                    <span key={n} className="flex items-baseline gap-2">
+                      {i > 0 && (
+                        <span aria-hidden className="text-[var(--color-ink-faint)]">
+                          ·
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        aria-pressed={n === days}
+                        onClick={() => setDays(n)}
+                        className={cx(
+                          "cursor-pointer transition-colors",
+                          n === days
+                            ? "font-semibold text-[var(--color-ink)]"
+                            : "text-[var(--color-ink-faint)] hover:text-[var(--color-blue-deep)]",
+                        )}
+                      >
+                        {n} days
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </header>
+              <ActivityStreak activity={stats.data.activity} />
+            </div>
+
+            <div className="border-t border-[var(--color-rule)] lg:border-t-0 lg:border-l">
+              <div className="p-4">
+                <h2 className="t-eyebrow mb-3.5">Where your work sits</h2>
+                <StatusStrip byStatus={stats.data.byStatus} />
+              </div>
+              {stats.data.totals.assigned > 0 && (
+                <div className="border-t border-[var(--color-rule-soft)] p-4">
+                  <h2 className="t-eyebrow mb-3.5">By priority</h2>
+                  <PriorityBars byPriority={stats.data.byPriority} />
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,1fr)]">
         <Section title="Assigned to me" count={tasks.items.length}>

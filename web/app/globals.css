@@ -626,6 +626,79 @@ select.field {
   color: var(--color-blue-deep);
 }
 
+/* ── figures ──────────────────────────────────────────────────
+   Charts are drawn in the same hand as the rest of the page:
+   flat fills, one hairline where a reference is genuinely
+   needed, and every number set in the data face. Blue carries
+   the series — the deeper the step, the further the work has
+   travelled. Coral stays what it is everywhere else: a signal,
+   spent only on overdue and on Critical.
+   ─────────────────────────────────────────────────────────── */
+
+/* Four figures on one plate, divided the way the page is divided. */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stat-row > * + * {
+  border-left: 1px solid var(--color-rule-soft);
+}
+
+.stat-row > :nth-child(odd) {
+  border-left: 0;
+}
+
+.stat-row > :nth-child(n + 3) {
+  border-top: 1px solid var(--color-rule-soft);
+}
+
+@media (min-width: 640px) {
+  .stat-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .stat-row > :nth-child(odd) {
+    border-left: 1px solid var(--color-rule-soft);
+  }
+  .stat-row > :first-child {
+    border-left: 0;
+  }
+  .stat-row > :nth-child(n + 3) {
+    border-top: 0;
+  }
+}
+
+.figure {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  font-size: 1.625rem;
+  line-height: 1;
+}
+
+/*
+ * A column stands up from its baseline once, on arrival. The stagger is
+ * small enough to read as one gesture rather than fourteen separate ones.
+ */
+@keyframes stand {
+  from {
+    scale: 1 0;
+  }
+  to {
+    scale: 1 1;
+  }
+}
+
+.stand {
+  transform-origin: bottom;
+  animation: stand 420ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/* The reference the columns are read against: its own value, and its own rule. */
+.ceiling {
+  border-top: 1px dashed var(--color-rule);
+}
+
 /* ── the timeline ─────────────────────────────────────────────
    The path device again, run vertically, for the one list that
    really is a sequence: what happened, newest first.
