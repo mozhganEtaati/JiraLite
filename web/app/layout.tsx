@@ -40,6 +40,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      // next-themes stamps the theme class here before paint, which the server
+      // could not have known about — this is the one place it may differ.
+      suppressHydrationWarning
       className={`${bricolage.variable} ${plexSans.variable} ${plexMono.variable} h-full`}
     >
       <body className="flex min-h-full flex-col">

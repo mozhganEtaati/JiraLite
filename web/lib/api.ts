@@ -20,20 +20,43 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 const ACCESS_KEY = "jl.access";
 const REFRESH_KEY = "jl.refresh";
 
+/**
+ * Whoever is holding a token is also the answer to "are we signed in", and the
+ * only copy of that lives in localStorage — which React cannot see. So the
+ * store announces its own writes and components subscribe with
+ * useSyncExternalStore instead of copying the value into state on mount.
+ */
+const tokenListeners = new Set<() => void>();
+
 export const tokens = {
   access: () =>
     typeof window === "undefined" ? null : localStorage.getItem(ACCESS_KEY),
   refresh: () =>
     typeof window === "undefined" ? null : localStorage.getItem(REFRESH_KEY),
+  /** Snapshot for useSyncExternalStore — a boolean, so it compares by value. */
+  has: () =>
+    typeof window !== "undefined" && localStorage.getItem(ACCESS_KEY) !== null,
+  subscribe: (fn: () => void) => {
+    tokenListeners.add(fn);
+    return () => {
+      tokenListeners.delete(fn);
+    };
+  },
   set(access: string, refresh?: string | null) {
     localStorage.setItem(ACCESS_KEY, access);
     if (refresh) localStorage.setItem(REFRESH_KEY, refresh);
+    announce();
   },
   clear() {
     localStorage.removeItem(ACCESS_KEY);
     localStorage.removeItem(REFRESH_KEY);
+    announce();
   },
 };
+
+function announce() {
+  for (const fn of tokenListeners) fn();
+}
 
 export class ApiError extends Error {
   status: number;

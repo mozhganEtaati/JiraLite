@@ -158,6 +158,8 @@ export default function SprintsPage() {
   );
 }
 
+const isoDay = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
 function CreateSprintDialog({
   open,
   onClose,
@@ -168,13 +170,13 @@ function CreateSprintDialog({
   boardId: string;
 }) {
   const qc = useQueryClient();
-  const today = new Date().toISOString().slice(0, 10);
-  const twoWeeks = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
 
   const [name, setName] = useState("");
   const [goal, setGoal] = useState("");
-  const [start, setStart] = useState(today);
-  const [end, setEnd] = useState(twoWeeks);
+  // Reading the clock is not something render may do, so the default two-week
+  // window is computed once, when the dialog's state is first created.
+  const [start, setStart] = useState(() => isoDay(Date.now()));
+  const [end, setEnd] = useState(() => isoDay(Date.now() + 14 * 864e5));
 
   const create = useMutation({
     mutationFn: () =>

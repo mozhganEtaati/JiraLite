@@ -143,7 +143,7 @@ export function ErrorNote({
     <p
       role="alert"
       className={cx(
-        "rounded-[3px] border border-[#e0c2c2] bg-[#fdf3f3] px-3 py-2 text-[13px] text-[var(--color-alarm)]",
+        "rounded-[var(--radius-md)] border border-[var(--color-error-rule)] bg-[var(--color-error-bg)] px-3 py-2 text-[13px] text-[var(--color-alarm)]",
         className,
       )}
     >
@@ -268,7 +268,7 @@ export function Modal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 pt-[10vh]"
-      style={{ background: "rgba(22,22,26,.34)" }}
+      style={{ background: "var(--color-scrim)" }}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* shadcn's components ship `dark:` utilities; this is what makes them fire */
+@custom-variant dark (&:is(.dark *));
+
 /* ─────────────────────────────────────────────────────────────
    JiraLite — "Daylight"
 
@@ -45,9 +48,78 @@
 
   --color-alarm: #a4231b;
 
+  /* what sits on top of a filled blue or red — never assume white */
+  --color-on-blue: #ffffff;
+  --color-on-alarm: #ffffff;
+
+  /* the signal as a fill that carries text (the unread count), and its ink */
+  --color-signal-fill: #b23d24;
+  --color-on-signal: #ffffff;
+
+  --color-error-bg: #fdf3f3;
+  --color-error-rule: #f0c9c9;
+
+  --color-scrim: rgba(11, 33, 56, 0.38);
+
+  /* the rail keeps its own ground: in light mode ink doubles as it, in dark it cannot */
+  --color-rail: #0b2138;
+
   --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Daylight after dark.
+
+   Not an inversion. The same composition holds: the rail stays
+   the deepest layer and the work surface sits a step above it,
+   so the figure/ground reading you learn in daylight still
+   applies at night.
+
+   Two things flip and must not be missed. Blue is a fill in
+   daylight with white on it; at night it is bright, so what
+   sits on it is dark (--color-on-blue). And ink doubles as the
+   rail's ground in daylight but becomes the text colour here,
+   which is why the rail owns --color-rail separately.
+   ───────────────────────────────────────────────────────────── */
+
+.dark {
+  --color-paper: #101e2c;
+  --color-paper-deep: #0b1621;
+  --color-surface: #16283a;
+  --color-haze: #1c3348;
+  --color-rail: #0a1522;
+
+  --color-ink: #e8f1f8;
+  --color-ink-soft: #a3bace;
+  --color-ink-faint: #6e8aa3;
+
+  --color-rule: #24405a;
+  --color-rule-soft: #1c3247;
+
+  --color-blue: #3fa9e0;
+  --color-blue-deep: #8fd0f2;
+  --color-blue-soft: #2e8fc4;
+  --color-blue-wash: #16344b;
+
+  --color-pink: #ff7a5c;
+  --color-pink-soft: #a85138;
+  --color-pink-wash: #3a1d14;
+  --color-over: #ffb39e;
+
+  --color-alarm: #ff8a80;
+
+  --color-on-blue: #06192b;
+  --color-on-alarm: #2b0b09;
+
+  --color-signal-fill: #ff7a5c;
+  --color-on-signal: #2b0b09;
+
+  --color-error-bg: #33191a;
+  --color-error-rule: #6b2f2f;
+
+  --color-scrim: rgba(2, 8, 15, 0.66);
 }
 
 /*
@@ -67,6 +139,21 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /*
+   * Tells the browser which way its own furniture should go: checkboxes,
+   * scrollbars, date pickers and autofill. Without it a native checkbox stays
+   * a white box on a dark page no matter what the rest of the sheet says.
+   */
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* native controls take the action colour rather than the browser's default blue */
+body {
+  accent-color: var(--color-blue);
 }
 
 body {
@@ -221,7 +308,7 @@ a {
   --r-line: rgba(255, 255, 255, 0.09);
   --r-raise: rgba(255, 255, 255, 0.06);
 
-  background: var(--color-ink);
+  background: var(--color-rail);
   color: var(--r-fg);
 }
 
@@ -330,7 +417,7 @@ a {
 
 .btn-primary {
   background: var(--color-blue);
-  color: #fff;
+  color: var(--color-on-blue);
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--color-blue-deep);
@@ -361,11 +448,11 @@ a {
 .btn-danger {
   background: transparent;
   color: var(--color-alarm);
-  border-color: #edc9c6;
+  border-color: var(--color-error-rule);
 }
 .btn-danger:hover:not(:disabled) {
   background: var(--color-alarm);
-  color: #fff;
+  color: var(--color-on-alarm);
   border-color: var(--color-alarm);
 }
 
@@ -441,6 +528,24 @@ select.field {
 
 .field-inset .field {
   padding-inline-end: 2.625rem;
+}
+
+/*
+ * Edge draws its own reveal control inside every password field, and Safari its
+ * password-manager key — beside our eye that reads as two toggles sitting on top
+ * of each other. Ours stays, since it is the one that is styled and labelled.
+ */
+.field-inset .field::-ms-reveal,
+.field-inset .field::-ms-clear {
+  display: none;
+}
+
+.field-inset .field::-webkit-credentials-auto-fill-button,
+.field-inset .field::-webkit-strong-password-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  margin: 0;
+  width: 0;
 }
 
 .field-eye {
@@ -655,6 +760,34 @@ select.field {
   --chart-3: #e0533a;
   --chart-4: #0b2138;
   --chart-5: #7d95a8;
+}
+
+.dark {
+  --background: #101e2c;
+  --foreground: #e8f1f8;
+  --card: #16283a;
+  --card-foreground: #e8f1f8;
+  --popover: #16283a;
+  --popover-foreground: #e8f1f8;
+  --primary: #3fa9e0;
+  --primary-foreground: #06192b;
+  --secondary: #1c3348;
+  --secondary-foreground: #8fd0f2;
+  --muted: #1c3348;
+  --muted-foreground: #a3bace;
+  --accent: #16344b;
+  --accent-foreground: #8fd0f2;
+  --destructive: #ff8a80;
+  --destructive-foreground: #2b0b09;
+  --border: #24405a;
+  --input: #24405a;
+  --ring: #2e8fc4;
+
+  --chart-1: #3fa9e0;
+  --chart-2: #8fd0f2;
+  --chart-3: #ff7a5c;
+  --chart-4: #e8f1f8;
+  --chart-5: #6e8aa3;
 }
 
 @theme inline {

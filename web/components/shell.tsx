@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
@@ -10,6 +11,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { api } from "@/lib/api";
 import { cx } from "@/lib/format";
@@ -31,23 +33,40 @@ export function useCurrentWorkspace() {
 
 const LAST_WS = "jl.workspace";
 
+/*
+ * The remembered workspace lives in localStorage, which React cannot observe,
+ * so it announces its own writes and readers subscribe. The server has no
+ * localStorage and reports null until hydration replaces it.
+ */
+const wsListeners = new Set<() => void>();
+
+function subscribeLastWs(fn: () => void) {
+  wsListeners.add(fn);
+  return () => {
+    wsListeners.delete(fn);
+  };
+}
+
+function readLastWs() {
+  return localStorage.getItem(LAST_WS);
+}
+
+function writeLastWs(id: string) {
+  localStorage.setItem(LAST_WS, id);
+  for (const fn of wsListeners) fn();
+}
+
 export function WorkspaceScope({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const fromPath = pathname.match(/^\/w\/([0-9a-f-]{36})/i)?.[1] ?? null;
-  const [stored, setStored] = useState<string | null>(null);
+  const stored = useSyncExternalStore(subscribeLastWs, readLastWs, () => null);
 
+  const setWorkspaceId = useCallback((id: string) => writeLastWs(id), []);
+
+  // Landing on a workspace URL is what makes it the remembered one.
   useEffect(() => {
-    setStored(localStorage.getItem(LAST_WS));
-  }, []);
-
-  const setWorkspaceId = useCallback((id: string) => {
-    localStorage.setItem(LAST_WS, id);
-    setStored(id);
-  }, []);
-
-  useEffect(() => {
-    if (fromPath) setWorkspaceId(fromPath);
-  }, [fromPath, setWorkspaceId]);
+    if (fromPath) writeLastWs(fromPath);
+  }, [fromPath]);
 
   const value = useMemo(
     () => ({ workspaceId: fromPath ?? stored, setWorkspaceId }),
@@ -281,6 +300,9 @@ export function Rail() {
                   </Link>
                 </li>
               ))}
+              <li className="border-t border-[var(--color-rule)] px-2.5 py-2">
+                <ThemeChoice />
+              </li>
               <li className="border-t border-[var(--color-rule)]">
                 <button
                   type="button"
@@ -298,6 +320,67 @@ export function Rail() {
         )}
       </div>
     </nav>
+  );
+}
+
+/**
+ * Light, dark, or whatever the machine says. "System" is a real choice rather
+ * than the absence of one, so it stays on the row instead of hiding behind a
+ * two-way toggle that silently stops following the desktop.
+ */
+function ThemeChoice() {
+  const { theme, setTheme } = useTheme();
+
+  /*
+   * The server cannot know the stored choice, so the row renders unselected
+   * until hydration finishes. Asking React whether we are on the client is a
+   * subscription, not state — an effect that sets state here would re-render
+   * the whole rail a second time on every mount.
+   */
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
+  const options = [
+    ["light", "Light"],
+    ["dark", "Dark"],
+    ["system", "System"],
+  ] as const;
+
+  return (
+    <div>
+      <div className="mb-1.5 text-[11px] font-medium text-[var(--color-ink-faint)]">
+        Appearance
+      </div>
+      <div
+        role="radiogroup"
+        aria-label="Appearance"
+        className="flex gap-1 rounded-[var(--radius-md)] bg-[var(--color-haze)] p-0.5"
+      >
+        {options.map(([value, label]) => {
+          const active = mounted && theme === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setTheme(value)}
+              className={cx(
+                "flex-1 rounded-[calc(var(--radius-md)-2px)] px-2 py-1 text-[12px] transition-colors",
+                active
+                  ? "bg-[var(--color-surface)] font-medium text-[var(--color-ink)] shadow-[0_1px_2px_rgba(11,33,56,.18)]"
+                  : "text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]",
+              )}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -352,8 +435,10 @@ function UnreadBadge() {
     <span
       className="t-num inline-flex h-[18px] min-w-[18px] items-center justify-center px-1.5 text-[10px] font-medium"
       style={{
-        background: "var(--color-pink)",
-        color: "#fff",
+        // the fill that carries text, not the border/dot coral — that one is
+        // too light to read a number on
+        background: "var(--color-signal-fill)",
+        color: "var(--color-on-signal)",
         borderRadius: 999,
       }}
     >

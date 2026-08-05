@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api, fetchBlobUrl } from "@/lib/api";
 import { useCursorList, useList, useProjectRole } from "@/lib/hooks";
 import { ago, cx, fileSize, fullDate } from "@/lib/format";
@@ -98,11 +98,23 @@ function IssueDetail({
   const [description, setDescription] = useState(issue.description ?? "");
   const [dirty, setDirty] = useState(false);
 
-  useEffect(() => {
+  /*
+   * Whenever the server hands back a different issue — a new one, or the same
+   * one saved elsewhere — the editor starts over from it and unsaved-changes
+   * goes quiet. Doing it during render keeps the fields from showing the
+   * previous issue for a frame.
+   */
+  const [seeded, setSeeded] = useState(issue);
+  if (
+    seeded.id !== issue.id ||
+    seeded.title !== issue.title ||
+    seeded.description !== issue.description
+  ) {
+    setSeeded(issue);
     setTitle(issue.title);
     setDescription(issue.description ?? "");
     setDirty(false);
-  }, [issue.id, issue.title, issue.description]);
+  }
 
   const save = useMutation({
     mutationFn: (patch: Record<string, unknown>) =>

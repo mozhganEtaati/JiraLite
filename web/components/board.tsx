@@ -21,7 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { cx } from "@/lib/format";
 import type {
@@ -34,6 +34,13 @@ import { Avatar, PriorityMark, TypeMark } from "@/components/marks";
 
 type Lanes = Record<string, BoardCardIssue[]>;
 
+function buildLanes(columns: Board["columns"], groups: BoardColumnGroup[]) {
+  const lanes: Lanes = {};
+  for (const c of columns) lanes[c.id] = [];
+  for (const g of groups) lanes[g.columnId] = g.issues;
+  return lanes;
+}
+
 export function BoardCanvas({
   board,
   groups,
@@ -44,15 +51,22 @@ export function BoardCanvas({
   canWrite: boolean;
 }) {
   const qc = useQueryClient();
-  const [lanes, setLanes] = useState<Lanes>({});
+  const [lanes, setLanes] = useState<Lanes>(() =>
+    buildLanes(board.columns, groups),
+  );
   const [dragging, setDragging] = useState<BoardCardIssue | null>(null);
 
-  useEffect(() => {
-    const next: Lanes = {};
-    for (const c of board.columns) next[c.id] = [];
-    for (const g of groups) next[g.columnId] = g.issues;
-    setLanes(next);
-  }, [board.columns, groups]);
+  /*
+   * A drag reorders the lanes locally so the card follows the pointer, then
+   * the server answer arrives as fresh props and takes over again. Rebuilding
+   * during render rather than in an effect means the board never paints one
+   * frame of the stale arrangement.
+   */
+  const [builtFrom, setBuiltFrom] = useState({ columns: board.columns, groups });
+  if (builtFrom.columns !== board.columns || builtFrom.groups !== groups) {
+    setBuiltFrom({ columns: board.columns, groups });
+    setLanes(buildLanes(board.columns, groups));
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),

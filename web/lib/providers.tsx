@@ -7,13 +7,14 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { ThemeProvider } from "next-themes";
 import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { ApiError, api, tokens } from "./api";
 import type { AuthTokens, Me } from "./types";
@@ -51,11 +52,17 @@ export function useSession() {
 function SessionProvider({ children }: { children: React.ReactNode }) {
   const qc = useQueryClient();
   const router = useRouter();
-  const [hasToken, setHasToken] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    setHasToken(Boolean(tokens.access()));
-  }, []);
+  /*
+   * The server has no localStorage, so it reports null — "not known yet" —
+   * and the first client render after hydration swaps in the real answer.
+   * tokens.set/clear announce themselves, so signing in or out re-renders
+   * from here without anyone assigning state.
+   */
+  const hasToken = useSyncExternalStore(
+    tokens.subscribe,
+    tokens.has,
+    () => null,
+  );
 
   const { data: me, isLoading } = useQuery({
     queryKey: ["me"],
@@ -71,7 +78,6 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
         password,
       });
       tokens.set(auth.accessToken, auth.refreshToken);
-      setHasToken(true);
       await qc.invalidateQueries();
     },
     [qc],
@@ -85,7 +91,6 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
       /* the token is going away either way */
     }
     tokens.clear();
-    setHasToken(false);
     qc.clear();
     router.replace("/login");
   }, [qc, router]);
@@ -113,8 +118,21 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
 export function Providers({ children }: { children: React.ReactNode }) {
   const [client] = useState(makeClient);
   return (
-    <QueryClientProvider client={client}>
-      <SessionProvider>{children}</SessionProvider>
-    </QueryClientProvider>
+    /*
+     * The theme defaults to whatever the machine is set to, so someone who runs
+     * their desktop dark never gets a white flash on the way in. next-themes
+     * writes the class before paint, which is why <html> carries
+     * suppressHydrationWarning in the root layout.
+     */
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <QueryClientProvider client={client}>
+        <SessionProvider>{children}</SessionProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

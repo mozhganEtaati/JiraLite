@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "@/lib/api";
 import { useProjectRole } from "@/lib/hooks";
 import { fullDate } from "@/lib/format";
@@ -33,15 +33,16 @@ export default function ProjectSettingsPage() {
     queryFn: () => api.get<Project>(`/api/projects/${projectId}`),
   });
 
+  // Both fields start at whatever the server last told us, and follow it if
+  // the project changes underneath while this page is open.
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-
-  useEffect(() => {
-    if (project) {
-      setName(project.name);
-      setDescription(project.description ?? "");
-    }
-  }, [project]);
+  const [seeded, setSeeded] = useState<Project | null>(null);
+  if (project && seeded !== project) {
+    setSeeded(project);
+    setName(project.name);
+    setDescription(project.description ?? "");
+  }
 
   const save = useMutation({
     mutationFn: () =>

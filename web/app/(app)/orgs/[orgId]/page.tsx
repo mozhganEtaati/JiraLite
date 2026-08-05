@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "@/lib/api";
 import { useWorkspaces } from "@/lib/hooks";
 import { fullDate } from "@/lib/format";
@@ -34,10 +34,14 @@ export default function OrgPage() {
   const mine = workspaces.items.filter((w) => w.organizationId === orgId);
   const isOwner = org?.ownerUserId === me?.id;
 
+  // The field starts at whatever the server last told us, and follows it if
+  // someone else renames the org while this page is open.
   const [name, setName] = useState("");
-  useEffect(() => {
-    if (org) setName(org.name);
-  }, [org]);
+  const [seededName, setSeededName] = useState<string | null>(null);
+  if (org && seededName !== org.name) {
+    setSeededName(org.name);
+    setName(org.name);
+  }
 
   const rename = useMutation({
     mutationFn: () => api.patch(`/api/organizations/${orgId}`, { name }),
