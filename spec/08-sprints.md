@@ -40,6 +40,7 @@ Let a Scrum team plan a time-boxed iteration, pull Issues into it, run it, and c
 - BR-06: A Sprint can only be deleted while `Status = Planned`. Deleting it moves any Issues currently assigned to it back to the Product Backlog (`SprintId = NULL`).
 - BR-07: Adding an Issue to a Sprint that is already assigned to a different Sprint reassigns it directly (no explicit "remove first" step required).
 - BR-08: Only `Scrum`-type Boards may have Sprints created on them.
+- BR-09: On completion, the number of Issues carried forward under BR-05 is **recorded** on the Sprint as `CarriedForwardIssueCount`, not merely returned. Because completion empties the Sprint of everything unfinished, what remains is Done by construction — without this figure the Sprint report ([24-reports.md](24-reports.md) BR-08) reads a dishonest 100% with nothing left to explain it.
 
 ## 7. Database Entities
 
@@ -59,6 +60,7 @@ Full canonical schema is consolidated in [18-database.md](18-database.md).
 | PlannedEndDateUtc | date | No | Must be after `PlannedStartDateUtc` |
 | StartedAtUtc | datetime2 | Yes | Set when transitioned to Active |
 | CompletedAtUtc | datetime2 | Yes | Set when transitioned to Completed |
+| CarriedForwardIssueCount | int | Yes | Set when transitioned to Completed (BR-09); null on Sprints completed before it was recorded |
 | CreatedByUserId | Guid (FK → User) | No | |
 | CreatedAtUtc | datetime2 | No | |
 
@@ -189,6 +191,7 @@ Content-Type: application/json
 - Given an Active Sprint with some Issues in Done columns and some not, when completed without `moveIncompleteIssuesToSprintId`, then Done Issues retain `SprintId`, and non-Done Issues have `SprintId` set to `NULL`.
 - Given the same scenario but with `moveIncompleteIssuesToSprintId` set to a valid Planned Sprint, then non-Done Issues have `SprintId` set to that Sprint instead.
 - Given a Planned Sprint with Issues assigned, when it is deleted, then those Issues return to the Product Backlog.
+- Given an Active Sprint with two unfinished Issues, when it is completed, then `CarriedForwardIssueCount` reads 2 on the stored Sprint, not only in the response (BR-09).
 
 ## 16. Future Improvements
 

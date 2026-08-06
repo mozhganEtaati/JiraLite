@@ -12,7 +12,8 @@ public static class GetIssue
     public record Response(
         Guid Id, string Key, int Number, string Type, Guid? ParentIssueId, string Title, string? Description,
         string Priority, Guid BoardColumnId, Guid? SprintId, string Rank, UserSummary? Assignee, UserSummary Reporter,
-        DateOnly? DueDateUtc, decimal? Estimate, IReadOnlyList<LabelItem> Labels, int SubtaskCount, string RowVersion);
+        DateOnly? DueDateUtc, decimal? Estimate, bool IsBlocked, string? BlockedReason, DateTime? BlockedSinceUtc,
+        IReadOnlyList<LabelItem> Labels, int SubtaskCount, string RowVersion);
 
     public static class Handler
     {
@@ -37,7 +38,8 @@ public static class GetIssue
             return Results.Ok(new Response(
                 issue.Id, issue.Key, issue.Number, issue.Type, issue.ParentIssueId, issue.Title, issue.Description,
                 issue.Priority, issue.BoardColumnId, issue.SprintId, issue.Rank, assignee, reporter,
-                issue.DueDateUtc, issue.Estimate, labels, subtaskCount, Convert.ToBase64String(issue.RowVersion)));
+                issue.DueDateUtc, issue.Estimate, issue.IsBlocked, issue.BlockedReason, issue.BlockedSinceUtc,
+                labels, subtaskCount, Convert.ToBase64String(issue.RowVersion)));
         }
     }
 

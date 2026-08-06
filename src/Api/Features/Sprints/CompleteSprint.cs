@@ -69,6 +69,10 @@ public static class CompleteSprint
 
             sprint.Status = SprintStatus.Completed;
             sprint.CompletedAtUtc = DateTime.UtcNow;
+            // Recorded, not just returned: completion empties the Sprint of everything unfinished
+            // (BR-05), so without this figure the Sprint report of a completed Sprint reads a
+            // dishonest 100% with nothing left to explain it (spec/24-reports.md BR-08).
+            sprint.CarriedForwardIssueCount = incompleteIssueIds.Count;
             await db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 

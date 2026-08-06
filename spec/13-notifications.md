@@ -24,6 +24,7 @@ Keep users informed of activity relevant to them without building a configurable
 - FR-03: When a Comment is added, the Issue's assignee, reporter, and prior commenters each receive a Notification (type `CommentAdded`), excluding the comment's author ([10-comments.md](10-comments.md) BR-05).
 - FR-04: A user can list their own Notifications, see an unread count, and mark one or all as read.
 - FR-05: Delivery per recipient is gated by that recipient's current `NotificationPreference` at the moment the triggering event occurs.
+- FR-06: When an Issue is blocked or unblocked ([09-issues.md](09-issues.md) FR-08, FR-09), its assignee and reporter each receive a Notification (type `IssueBlocked` / `IssueUnblocked`), excluding whoever performed the action. A blocker nobody is told about is a blocker nobody clears.
 
 ## 5. Non-Functional Requirements
 
@@ -49,7 +50,7 @@ Full canonical schema is consolidated in [18-database.md](18-database.md).
 |---|---|---|---|
 | Id | Guid (PK) | No | |
 | RecipientUserId | Guid (FK → User) | No | |
-| Type | string(30) | No | `IssueAssigned` \| `IssueStatusChanged` \| `CommentAdded` |
+| Type | string(30) | No | `IssueAssigned` \| `IssueStatusChanged` \| `CommentAdded` \| `IssueBlocked` \| `IssueUnblocked` |
 | Summary | string(500) | No | Precomputed human-readable text (BR-05) |
 | EntityType | string(50) | No | e.g. `Issue` |
 | EntityId | Guid | No | Id of the referenced entity |

@@ -316,6 +316,9 @@ function Card({
           {issue.key}
         </Link>
         <PriorityMark priority={issue.priority} />
+        {/* A blocked card that looks like every other card is the problem
+            restated, so the mark rides on the board itself. */}
+        {issue.isBlocked && <span className="chip chip-signal">Blocked</span>}
         <span className="ml-auto">
           <Avatar user={issue.assignee} size={20} />
         </span>

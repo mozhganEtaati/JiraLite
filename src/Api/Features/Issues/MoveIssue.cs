@@ -74,6 +74,16 @@ public static class MoveIssue
             issue.UpdatedByUserId = actorUserId;
             issue.UpdatedAtUtc = DateTime.UtcNow;
 
+            // spec/09-issues.md BR-17 — an Issue in a Done column cannot be blocked. Blocking is
+            // refused there, so finishing blocked work must clear the flag too; otherwise the
+            // rule holds only against the endpoint and the card stays marked Blocked forever.
+            if (targetColumn.Column.IsDoneColumn && issue.IsBlocked)
+            {
+                issue.IsBlocked = false;
+                issue.BlockedReason = null;
+                issue.BlockedSinceUtc = null;
+            }
+
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
             if (targetColumn.Board.Type == BoardType.Kanban)

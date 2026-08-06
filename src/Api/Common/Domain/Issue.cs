@@ -22,6 +22,9 @@ public class Issue
     public Guid ReporterUserId { get; set; }
     public DateOnly? DueDateUtc { get; set; }
     public decimal? Estimate { get; set; }
+    public bool IsBlocked { get; set; }
+    public string? BlockedReason { get; set; }
+    public DateTime? BlockedSinceUtc { get; set; }
     public Guid CreatedByUserId { get; init; }
     public DateTime CreatedAtUtc { get; init; }
     public Guid UpdatedByUserId { get; set; }

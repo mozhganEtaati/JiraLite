@@ -5,6 +5,7 @@ import { api, type Listed, type Paged, type Query } from "./api";
 import type {
   MyStats,
   ProjectRoleResult,
+  SprintReport,
   Workspace,
   WorkspaceRoleResult,
   WorkspaceItem,
@@ -63,6 +64,20 @@ export function useMyStats(days: number) {
   return useQuery({
     queryKey: ["my-stats", days],
     queryFn: () => api.get<MyStats>("/api/dashboard/my-stats", { days }),
+    placeholderData: (previous) => previous,
+  });
+}
+
+/**
+ * One sprint read whole (spec/24-reports.md). Like useMyStats it is a shape
+ * rather than a list, and it holds the sprint already on screen while another
+ * loads — switching sprints should move the figures, not blank the page.
+ */
+export function useSprintReport(sprintId?: string) {
+  return useQuery({
+    queryKey: ["sprint-report", sprintId],
+    enabled: Boolean(sprintId),
+    queryFn: () => api.get<SprintReport>(`/api/sprints/${sprintId}/report`),
     placeholderData: (previous) => previous,
   });
 }

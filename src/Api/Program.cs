@@ -423,6 +423,7 @@ CompleteSprint.MapEndpoint(app);
 DeleteSprint.MapEndpoint(app);
 AddSprintIssue.MapEndpoint(app);
 RemoveSprintIssue.MapEndpoint(app);
+GetSprintReport.MapEndpoint(app);
 
 CreateIssue.MapEndpoint(app);
 GetIssue.MapEndpoint(app);
@@ -430,6 +431,8 @@ ListIssues.MapEndpoint(app);
 ListSubtasks.MapEndpoint(app);
 EditIssue.MapEndpoint(app);
 MoveIssue.MapEndpoint(app);
+BlockIssue.MapEndpoint(app);
+UnblockIssue.MapEndpoint(app);
 DeleteIssue.MapEndpoint(app);
 GetProductBacklog.MapEndpoint(app);
 GetSprintBacklog.MapEndpoint(app);

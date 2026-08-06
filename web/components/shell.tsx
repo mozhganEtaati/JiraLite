@@ -456,6 +456,7 @@ export function ProjectTabs({ projectId }: { projectId: string }) {
     ["/board", "Board"],
     ["/backlog", "Backlog"],
     ["/sprints", "Sprints"],
+    ["/reports", "Reports"],
     ["/issues", "Issues"],
     ["/calendar", "Calendar"],
     ["/settings", "Settings"],

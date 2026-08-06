@@ -35,7 +35,8 @@ The web app proxies `/api` through a Next rewrite, so the browser never crosses 
 **Auth** — register, login, rotating refresh tokens with reuse detection, password reset by emailed one-time link.
 **Workspaces** — organizations, workspaces, members, email invitations, teams.
 **Planning** — projects, Scrum/Kanban boards with custom columns, sprints, product and sprint backlogs with drag-and-drop LexoRank ordering.
-**Work** — five issue types with parent/child hierarchy, comments, attachments, labels.
+**Work** — five issue types with parent/child hierarchy, comments, attachments, labels, and a blocked state with its reason and age.
+**Reporting** — a sprint report reading progress against the calendar, blockers, team load, and a health verdict that shows its reasons.
 **Everything else** — in-app and email notifications, dashboard, calendar, and admin views.
 
 Deliberately **not** included: full-text search, time tracking, custom fields, workflow builders, issue links beyond parent/child. Those are documented non-goals, not gaps.

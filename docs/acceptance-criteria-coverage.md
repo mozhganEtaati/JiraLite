@@ -106,6 +106,7 @@ covered, or covered by something narrower than it sounds, that is stated in the 
 | 3 | Complete without a carry-over target: Done keep `SprintId`, others null | `Sprints/SprintIssuesTests.Completing_a_sprint_carries_forward_incomplete_issues_and_keeps_done_ones` |
 | 4 | Complete with `moveIncompleteIssuesToSprintId`: incomplete move there | same test |
 | 5 | Deleting a Planned Sprint returns its Issues to the backlog | `SprintIssuesTests.Deleting_a_planned_sprint_returns_its_issues_to_the_product_backlog` |
+| 6 | Completion records `CarriedForwardIssueCount` on the Sprint, not only in the response (BR-09) | `Sprints/SprintReportTests.A_completed_sprint_reports_what_was_carried_out_of_it` — asserted through the report rather than against the row directly |
 
 ## 09 — Issues
 
@@ -117,6 +118,11 @@ covered, or covered by something narrower than it sounds, that is stated in the 
 | 4 | Deleting a Story deletes its Subtasks | `DeleteIssueTests.Deleting_a_story_cascades_its_subtasks` |
 | 5 | Moving onto a Kanban column clears `SprintId` | `Issues/MoveIssueTests.Moving_onto_a_kanban_column_clears_sprint_id_and_cascades_to_subtasks` |
 | 6 | Stale `rowVersion` on move → 409 | `MoveIssueTests.Stale_row_version_is_rejected_with_409`; `Ranking/ConcurrentRankTests.Concurrent_moves_...` |
+| 7 | Blocking records the reason and starts the clock (BR-15) | `Issues/BlockIssueTests.Blocking_records_the_reason_and_starts_the_clock` (+ `Blocking_without_a_reason_is_rejected`) |
+| 8 | Re-blocking rewrites the reason but keeps `BlockedSinceUtc` (BR-16) | `BlockIssueTests.Re_blocking_rewrites_the_reason_but_keeps_the_original_timestamp` |
+| 9 | An Issue in a Done column cannot be blocked (BR-17) | `BlockIssueTests.Blocking_an_issue_in_a_done_column_is_rejected` |
+| 10 | Unblocking clears all three fields; unblocking an unblocked Issue 409s (BR-18) | `BlockIssueTests.Unblocking_clears_the_flag_the_reason_and_the_timestamp`; `Unblocking_an_issue_that_is_not_blocked_is_rejected` |
+| 11 | Moving a blocked Issue into a Done column clears its blocked state (BR-17, reverse) | `BlockIssueTests.Finishing_a_blocked_issue_clears_its_blocked_state` |
 
 ## 10 — Comments
 
@@ -220,19 +226,45 @@ Added in Phase 8, after T048's 01–17 sweep. Listed here so the coverage pictur
 | 10 | Deactivated owner's tokens stop authenticating (BR-07) | `PersonalAccessTokenAuthTests.A_deactivated_owners_tokens_stop_working_without_being_revoked` |
 | 11 | `Mcp:Enabled=false` ⇒ `/mcp` 404s, rest of API unchanged | `Mcp/McpDisabledTests` (all three) |
 
+## 24 — Reports
+
+Added after T048's 01–17 sweep, alongside the Issue blocked state it reports on.
+
+| # | Criterion | Covered by |
+|---|---|---|
+| 1 | Subtasks excluded from every figure (BR-02) | `Sprints/SprintReportTests.Subtasks_are_excluded_from_every_count` |
+| 2 | Points summed with `unestimatedIssues` beside them; both percentages reported | `SprintReportTests.Points_are_summed_and_unestimated_issues_are_reported_beside_them` |
+| 3 | Status buckets group by Column name, Done last, regardless of `DisplayOrder` (BR-09) | `SprintReportTests.Status_buckets_group_by_column_name_with_done_last` |
+| 4 | Unassigned work gets its own `null`-user row (BR-10) | `SprintReportTests.Unassigned_work_gets_its_own_row_rather_than_being_dropped` |
+| 5 | A Planned Sprint has null pace and null state (BR-04, BR-05) | `SprintReportTests.A_planned_sprint_has_no_pace_and_no_verdict` |
+| 6 | Last day with nothing done ⇒ `OffTrack`/`WellBehindPace` alone, never doubled (BR-06) | `SprintReportTests.A_sprint_on_its_last_day_with_nothing_done_is_off_track` |
+| 7 | 1-in-10 blocked ⇒ `AtRisk`/`BlockedWork`; 2-in-4 ⇒ `OffTrack`/`HeavilyBlocked` (BR-07) | `SprintReportTests.One_blocked_issue_among_many_puts_the_sprint_at_risk`; `Two_blockers_above_a_fifth_of_open_work_is_off_track` |
+| 8 | A lone blocker stays `AtRisk` however small the Sprint — the count floor (BR-07) | `SprintReportTests.A_lone_blocker_stays_at_risk_however_small_the_sprint` |
+| 9 | Overdue and due-after-end are both named, not just the first (BR-06) | `SprintReportTests.Overdue_work_and_work_due_after_the_sprint_are_both_reported` |
+| 10 | An empty Sprint is 200 `OnTrack`/`EmptySprint`, not an error (BR-07) | `SprintReportTests.An_empty_sprint_is_on_track_rather_than_an_error` |
+| 11 | A completed Sprint reads 100% **and** reports its carried-forward count (BR-08) | `SprintReportTests.A_completed_sprint_reports_what_was_carried_out_of_it` |
+| 12 | Non-member gets 403; unknown Sprint gets 404 (§13, §14) | `SprintReportTests.A_non_member_cannot_read_the_report`; `An_unknown_sprint_is_a_404` |
+
+Not covered by a test: the healthy path's reason list being empty is asserted
+(`A_healthy_sprint_reports_on_track_with_nothing_to_say`), but the exact wording of each reason's
+`detail` string is not — only its `code`. The codes are the contract; the prose is not.
+
 ---
 
 ## Regression run
 
-The whole suite, against the final Phase 8 code:
+The whole suite, against the current code:
 
 ```
 dotnet test JiraLite.slnx
-Passed!  -  Failed: 0,  Passed: 264,  Skipped: 0,  Total: 264,  Duration: 3 m 34 s
+Passed!  -  Failed: 0,  Passed: 306,  Skipped: 0,  Total: 306,  Duration: 2 m 5 s
 ```
 
 The Phase 7 baseline was 229; Phase 8 added 35 (33 MCP/token tests plus two `PersonalAccessToken`
-index rows in `IndexCoverageTests`).
+index rows in `IndexCoverageTests`), reaching the 264 this document was written against. Of the 42
+added since, 26 belong to the Sprint Report and the Issue blocked state it reports on — 11 in
+`Issues/BlockIssueTests`, 15 in `Sprints/SprintReportTests`. The other 16 came from the work that
+landed between (dashboard stats and charts among them) and are not itemised here.
 
 Integration tests only — there is no separate unit-test project. Every test runs against a real
 SQL Server in a Testcontainers container, migrated by the same EF migrations the production image

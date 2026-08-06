@@ -7,7 +7,7 @@ namespace JiraLite.Api.Features.Boards;
 /// <summary>spec/06-boards.md §9, §11 — Issues grouped by column, ordered by Rank within each column, Subtasks excluded (spec/07-backlog.md BR-04).</summary>
 public static class GetBoardIssues
 {
-    public record IssueItem(Guid Id, string Key, string Title, string Type, string Priority, UserSummary? Assignee);
+    public record IssueItem(Guid Id, string Key, string Title, string Type, string Priority, UserSummary? Assignee, bool IsBlocked);
 
     public record ColumnGroup(Guid ColumnId, IReadOnlyList<IssueItem> Issues);
 
@@ -30,7 +30,7 @@ public static class GetBoardIssues
             var issues = await db.Issues
                 .Where(i => columnIds.Contains(i.BoardColumnId) && i.Type != IssueType.Subtask)
                 .OrderBy(i => i.Rank)
-                .Select(i => new { i.Id, i.Key, i.Title, i.Type, i.Priority, i.BoardColumnId, i.AssigneeUserId })
+                .Select(i => new { i.Id, i.Key, i.Title, i.Type, i.Priority, i.BoardColumnId, i.AssigneeUserId, i.IsBlocked })
                 .ToListAsync(cancellationToken);
 
             var assignees = await db.GetUserSummariesAsync(issues.Where(i => i.AssigneeUserId is not null).Select(i => i.AssigneeUserId!.Value), cancellationToken);
@@ -42,7 +42,8 @@ public static class GetBoardIssues
                         .Where(i => i.BoardColumnId == columnId)
                         .Select(i => new IssueItem(
                             i.Id, i.Key, i.Title, i.Type, i.Priority,
-                            i.AssigneeUserId is not null && assignees.TryGetValue(i.AssigneeUserId.Value, out var summary) ? summary : null))
+                            i.AssigneeUserId is not null && assignees.TryGetValue(i.AssigneeUserId.Value, out var summary) ? summary : null,
+                            i.IsBlocked))
                         .ToList()))
                 .ToList();
 

@@ -13,7 +13,7 @@
 import { format } from "date-fns";
 import { PriorityMark } from "@/components/marks";
 import { cx, fromUtc } from "@/lib/format";
-import type { MyStats, PriorityName } from "@/lib/types";
+import type { MyStats, PriorityName, SprintReport } from "@/lib/types";
 
 /* ── the stat row ─────────────────────────────────────────── */
 
@@ -236,14 +236,18 @@ function statusColor(index: number, count: number) {
   return RAMP[Math.round((index / (count - 1)) * (RAMP.length - 1))];
 }
 
-export function StatusStrip({ byStatus }: { byStatus: MyStats["byStatus"] }) {
+export function StatusStrip({
+  byStatus,
+  empty = "Issues appear here the moment someone puts your name on one.",
+}: {
+  byStatus: MyStats["byStatus"];
+  /** The strip is shared by a first-person dashboard and a whole-team sprint
+      report, and "your name" is only true on one of them. */
+  empty?: string;
+}) {
   const total = byStatus.reduce((sum, b) => sum + b.count, 0);
   if (total === 0) {
-    return (
-      <p className="py-6 text-[13px] text-[var(--color-ink-soft)]">
-        Issues appear here the moment someone puts your name on one.
-      </p>
-    );
+    return <p className="py-6 text-[13px] text-[var(--color-ink-soft)]">{empty}</p>;
   }
 
   // Done columns already sort last, so the ramp deepens towards finished work
@@ -333,6 +337,179 @@ export function PriorityBars({
           </span>
           <span className="t-num w-5 shrink-0 text-right text-[12px]">
             {p.count}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/* ── sprint progress ──────────────────────────────────────────
+   One bar, one mark. The bar is how much of the sprint is done;
+   the mark is how much of its calendar has gone. The whole "are
+   we going to make it?" question is the gap between the two, so
+   nothing else is drawn on it.
+   ─────────────────────────────────────────────────────────── */
+
+export function SprintProgress({
+  progress,
+  pace,
+}: {
+  progress: SprintReport["progress"];
+  pace: SprintReport["pace"];
+}) {
+  const done = progress.donePercentByIssues;
+  const expected = pace?.expectedPercent ?? null;
+  // Coral is signal everywhere else on the page, so it is spent here only when
+  // the work has actually fallen behind the calendar — never on the pace mark
+  // itself, which is a neutral fact about the date.
+  const behind = expected !== null && done < expected;
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="figure">{done}%</span>
+        <span className="t-meta">
+          {progress.issues.done} of {progress.issues.total} issues
+        </span>
+      </div>
+
+      <div
+        className="relative mt-2.5 overflow-hidden rounded-full"
+        style={{ height: 10, background: "var(--color-rule-soft)" }}
+        role="img"
+        aria-label={
+          expected === null
+            ? `${done}% of this sprint's issues are done.`
+            : `${done}% of this sprint's issues are done, with ${expected}% of the sprint elapsed.`
+        }
+      >
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${done}%`,
+            background: behind ? "var(--color-pink)" : "var(--color-blue)",
+          }}
+        />
+        {/* The pace line rides over the fill rather than beside it: the reading
+            that matters is which side of it the fill ends on. */}
+        {expected !== null && (
+          <span
+            aria-hidden
+            className="absolute top-0 bottom-0"
+            style={{
+              left: `${expected}%`,
+              width: 2,
+              background: "var(--color-ink)",
+            }}
+            title={`${expected}% of the sprint elapsed`}
+          />
+        )}
+      </div>
+
+      {pace && (
+        <div className="t-meta mt-2 flex flex-wrap gap-x-4">
+          <span>
+            Day {pace.elapsedDays} of {pace.totalDays}
+          </span>
+          <span>
+            {pace.remainingDays === 0
+              ? "Last day"
+              : `${pace.remainingDays} days left`}
+          </span>
+          <span>{pace.expectedPercent}% elapsed</span>
+        </div>
+      )}
+
+      {progress.points.total > 0 && (
+        <div className="t-meta mt-1 flex flex-wrap gap-x-4">
+          <span>
+            {progress.points.done} of {progress.points.total} points (
+            {progress.donePercentByPoints}%)
+          </span>
+          {progress.points.unestimatedIssues > 0 && (
+            <span>
+              {progress.points.unestimatedIssues} unestimated
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── who is carrying it ───────────────────────────────────────
+   A row a person, each row split done-then-open so the finished
+   part of everyone's load lines up on the left and the eye can
+   run down it. Bars are scaled against the busiest person, not
+   against each row's own total, or a light load would look the
+   same as a heavy one.
+   ─────────────────────────────────────────────────────────── */
+
+export function AssigneeLoad({
+  byAssignee,
+}: {
+  byAssignee: SprintReport["byAssignee"];
+}) {
+  const ceiling = Math.max(...byAssignee.map((a) => a.total), 1);
+
+  if (byAssignee.length === 0) {
+    return (
+      <p className="py-6 text-[13px] text-[var(--color-ink-soft)]">
+        Nothing is in this sprint yet.
+      </p>
+    );
+  }
+
+  return (
+    <ul className="space-y-2.5">
+      {byAssignee.map((a) => (
+        <li
+          key={a.user?.id ?? "unassigned"}
+          className="flex items-center gap-2.5"
+        >
+          <span
+            className={cx(
+              "w-[110px] shrink-0 truncate text-[12px]",
+              a.user
+                ? "text-[var(--color-ink)]"
+                : "text-[var(--color-ink-faint)] italic",
+            )}
+            title={a.user?.displayName ?? "Unassigned"}
+          >
+            {a.user?.displayName ?? "Unassigned"}
+          </span>
+
+          <span
+            className="flex min-w-0 flex-1 gap-px overflow-hidden rounded-full"
+            style={{ height: 8, background: "var(--color-rule-soft)" }}
+            title={`${a.done} done, ${a.open} open${a.blocked > 0 ? `, ${a.blocked} blocked` : ""}`}
+          >
+            <span
+              style={{
+                width: `${(a.done / ceiling) * 100}%`,
+                background: "var(--color-blue-deep)",
+              }}
+            />
+            <span
+              style={{
+                width: `${(a.open / ceiling) * 100}%`,
+                background: "var(--color-blue-soft)",
+              }}
+            />
+          </span>
+
+          {a.blocked > 0 && (
+            <span
+              className="t-num shrink-0 text-[11px]"
+              style={{ color: "var(--color-over)" }}
+              title={`${a.blocked} blocked`}
+            >
+              {a.blocked} blocked
+            </span>
+          )}
+          <span className="t-num w-14 shrink-0 text-right text-[12px]">
+            {a.done}/{a.total}
           </span>
         </li>
       ))}

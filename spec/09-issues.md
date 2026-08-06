@@ -28,6 +28,8 @@ Provide one consistent work-item model that supports Jira-style hierarchy (Epic 
 - FR-05: A Project Admin or Workspace Admin can delete an Issue.
 - FR-06: Any Project member can list and filter Issues by type, status (column), assignee, priority, label, or sprint.
 - FR-07: Any Project member can list the Subtasks of a given Issue.
+- FR-08: A Developer or Project Admin can mark an Issue as blocked, recording why and when.
+- FR-09: A Developer or Project Admin can clear an Issue's blocked state.
 
 ## 5. Non-Functional Requirements
 
@@ -56,6 +58,12 @@ Provide one consistent work-item model that supports Jira-style hierarchy (Epic 
 - BR-13: `ReporterUserId` defaults to the creating user and is not editable by Developers — only Project Admins or Workspace Admins may reassign it.
 - BR-14: `Priority` defaults to `Medium` if not specified at creation.
 
+**Blocked state**
+- BR-15: Blocking requires a `BlockedReason`. A blocker without one cannot be cleared by anyone who was not in the room when it was raised, and reports nothing worth reading — so it is rejected rather than stored empty.
+- BR-16: Blocking an Issue that is already blocked rewrites `BlockedReason` but leaves `BlockedSinceUtc` untouched. The timestamp answers "how long has this been stuck", which sharpening the wording must not reset.
+- BR-17: An Issue whose current `BoardColumn.IsDoneColumn = true` cannot be blocked. Finished work is not blocked, and the blocker would sit in the Sprint report ([24-reports.md](24-reports.md)) describing work that is already over. The same rule applies in reverse: moving a blocked Issue **into** a Done column clears its blocked state, so the invariant holds against the data and not merely against the block endpoint.
+- BR-18: Unblocking clears `IsBlocked`, `BlockedReason`, and `BlockedSinceUtc` together. Unblocking an Issue that is not blocked is rejected rather than treated as a no-op, matching how the Sprint lifecycle treats transitions that have already happened ([08-sprints.md](08-sprints.md) §13).
+
 ## 7. Database Entities
 
 Full canonical schema is consolidated in [18-database.md](18-database.md).
@@ -80,6 +88,9 @@ Full canonical schema is consolidated in [18-database.md](18-database.md).
 | ReporterUserId | Guid (FK → User) | No | Defaults to creator (BR-13) |
 | DueDateUtc | date | Yes | |
 | Estimate | decimal(5,2) | Yes | Story points |
+| IsBlocked | bit | No | Default `false` (BR-15–BR-18) |
+| BlockedReason | string(500) | Yes | Required while `IsBlocked` (BR-15) |
+| BlockedSinceUtc | datetime2 | Yes | Set on the first block, kept across re-blocks (BR-16) |
 | CreatedByUserId | Guid (FK → User) | No | |
 | CreatedAtUtc | datetime2 | No | |
 | UpdatedByUserId | Guid (FK → User) | No | |
@@ -109,6 +120,8 @@ Unique constraint: (`ProjectId`, `Number`).
 | GET | `/api/issues/{issueId}` | Project Member or Workspace Admin | Get Issue |
 | PATCH | `/api/issues/{issueId}` | Developer, Project Admin, or Workspace Admin | Edit fields (reporter change requires Project Admin/Workspace Admin — BR-13) |
 | PATCH | `/api/issues/{issueId}/move` | Developer, Project Admin, or Workspace Admin | Change `BoardColumnId` |
+| POST | `/api/issues/{issueId}/block` | Developer, Project Admin, or Workspace Admin | Mark blocked with a reason (BR-15) |
+| POST | `/api/issues/{issueId}/unblock` | Developer, Project Admin, or Workspace Admin | Clear the blocked state (BR-18) |
 | DELETE | `/api/issues/{issueId}` | Project Admin or Workspace Admin | Delete Issue |
 | GET | `/api/issues/{issueId}/subtasks` | Project Member or Workspace Admin | List Subtasks |
 

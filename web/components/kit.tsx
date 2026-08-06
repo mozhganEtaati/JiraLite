@@ -265,6 +265,12 @@ export function Modal({
 
   if (!open) return null;
 
+  /*
+   * The panel sets text-start explicitly. A dialog is fixed-positioned but is
+   * still a DOM descendant of whatever opened it, so one invoked from inside a
+   * right-aligned cell inherits that alignment and sets its own labels and
+   * hints ragged-left.
+   */
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 pt-[10vh]"
@@ -278,7 +284,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="plate-in w-full"
+        className="plate-in w-full text-start"
         style={{
           maxWidth: width,
           background: "var(--color-surface)",

@@ -19,6 +19,8 @@ public class IssueConfiguration : IEntityTypeConfiguration<Issue>
         builder.Property(i => i.Rank).HasMaxLength(255).IsRequired();
         builder.Property(i => i.DueDateUtc).HasColumnType("date");
         builder.Property(i => i.Estimate).HasColumnType("decimal(5,2)");
+        builder.Property(i => i.IsBlocked).HasDefaultValue(false);
+        builder.Property(i => i.BlockedReason).HasMaxLength(500);
         builder.Property(i => i.CreatedAtUtc).IsRequired();
         builder.Property(i => i.UpdatedAtUtc).IsRequired();
         builder.Property(i => i.RowVersion).IsRowVersion();

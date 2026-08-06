@@ -39,7 +39,7 @@ Documents are numbered in dependency order — each one assumes the concepts def
 | 11 | [Attachments](11-attachments.md) | Upload, Download, Preview |
 | 12 | [Labels](12-labels.md) | CRUD |
 | 13 | [Notifications](13-notifications.md) | Email, In-App |
-| 14 | [Dashboard](14-dashboard.md) | My Tasks, My Projects, Recent Activity |
+| 14 | [Dashboard](14-dashboard.md) | My Tasks, My Projects, Recent Activity, My Stats |
 | 15 | [Calendar](15-calendar.md) | Due Dates, Sprint Timeline |
 | 16 | [RBAC](16-rbac.md) | Roles (Admin, Project Admin, Developer, Viewer), permissions |
 | 17 | [Admin](17-admin.md) | User/Role/Project/Workspace administration |
@@ -49,6 +49,7 @@ Documents are numbered in dependency order — each one assumes the concepts def
 | 21 | [Roadmap](21-roadmap.md) | Phased delivery plan |
 | 22 | [Tasks](22-tasks.md) | Implementation task breakdown |
 | 23 | [MCP Server](23-mcp-server.md) | Model Context Protocol tool surface, Personal Access Tokens |
+| 24 | [Reports](24-reports.md) | Sprint report: progress against pace, blockers, team load, health |
 
 ## Domain Model Summary
 

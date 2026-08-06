@@ -298,6 +298,7 @@ Purpose: time-boxed iteration on a Scrum Board.
 | PlannedEndDateUtc | date | No | |
 | StartedAtUtc | datetime2 | Yes | |
 | CompletedAtUtc | datetime2 | Yes | |
+| CarriedForwardIssueCount | int | Yes | Issues moved out on completion ([08-sprints.md](08-sprints.md) BR-05); null on Sprints completed before it was recorded |
 | CreatedByUserId | Guid | No | FK → User, `ON DELETE NO ACTION` |
 | CreatedAtUtc | datetime2 | No | |
 
@@ -324,6 +325,9 @@ Purpose: central work-item entity (Task/Story/Bug/Epic/Subtask).
 | ReporterUserId | Guid | No | FK → User, `ON DELETE NO ACTION` |
 | DueDateUtc | date | Yes | |
 | Estimate | decimal(5,2) | Yes | |
+| IsBlocked | bit | No | Default `false` ([09-issues.md](09-issues.md) BR-15–BR-18) |
+| BlockedReason | string(500) | Yes | Required while `IsBlocked` |
+| BlockedSinceUtc | datetime2 | Yes | Set on the first block, kept across re-blocks |
 | CreatedByUserId | Guid | No | FK → User, `ON DELETE NO ACTION` |
 | CreatedAtUtc | datetime2 | No | |
 | UpdatedByUserId | Guid | No | FK → User, `ON DELETE NO ACTION` |

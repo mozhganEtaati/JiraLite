@@ -176,6 +176,14 @@ function Move-Issue {
         @{ boardColumnId = $ColumnId; rowVersion = $issue.rowVersion } -Token $User.Token | Out-Null
 }
 
+function Block-Issue {
+    param($User, [string]$IssueId, [string]$Reason)
+
+    $issue = Invoke-Api GET "/api/issues/$IssueId" -Token $User.Token
+    Invoke-Api POST "/api/issues/$IssueId/block" `
+        @{ reason = $Reason; rowVersion = $issue.rowVersion } -Token $User.Token | Out-Null
+}
+
 function Write-Step { param([string]$Message) Write-Host "  $Message" -ForegroundColor DarkGray }
 
 # ---------- the cast ----------
@@ -460,7 +468,12 @@ foreach ($project in $projects) {
             priority        = $item.Priority
             assigneeUserId  = $assignee
             description     = "Raised during sprint planning. See the linked design doc for acceptance criteria and the rollout checklist."
-            estimate        = @(1, 2, 3, 5, 8)[$index % 5]
+        }
+        # One issue per project is deliberately left unestimated, so the sprint
+        # report's points figure arrives with the caveat it needs rather than
+        # looking like a clean total.
+        if ($index -ne 4) {
+            $patch.estimate = @(1, 2, 3, 5, 8)[$index % 5]
         }
         if ($null -ne $item.Due) {
             $patch.dueDateUtc = $today.AddDays($item.Due).ToString("yyyy-MM-dd")
@@ -520,6 +533,43 @@ foreach ($project in $projects) {
     }
 }
 Write-Step "Active sprints populated"
+
+# ---------- blockers ----------
+#
+# One blocked issue per active sprint, with a reason someone could actually act
+# on. Without it the sprint report opens on an empty Blocked panel and reads
+# On track everywhere, which shows none of what the page is for.
+
+$blockers = @(
+    "Waiting on the payments vendor's security review - chased twice, no date yet."
+    "Needs the shared auth library bumped first; that PR is still in review."
+    "Design decision outstanding on the empty state. Raised with the team."
+)
+
+# Indices 1 and 3 are both in the active sprint and both sit in In Progress - a
+# done issue cannot be blocked (spec/09-issues.md BR-17). Apollo gets two so the
+# demo shows the top severity as well: HeavilyBlocked needs at least two blockers
+# and a fifth of open work (spec/24-reports.md BR-07), so one project reads
+# OffTrack and the other two read AtRisk.
+$blockPlan = @{ "APOLLO" = @(1, 3) }
+
+$blocked = 0
+$b = 0
+foreach ($project in $projects) {
+    $slots = if ($blockPlan.ContainsKey($project.Key)) { $blockPlan[$project.Key] } else { @(1) }
+    foreach ($slot in $slots) {
+        $target = $created[$project.Key] | Select-Object -Skip $slot -First 1
+        if (-not $target) { continue }
+        try {
+            Block-Issue -User $demo -IssueId $target.Id -Reason $blockers[$b % $blockers.Count]
+            $blocked++
+        } catch {
+            Write-Step "$($project.Key): could not block ($($_.Exception.Message))"
+        }
+        $b++
+    }
+}
+Write-Step "$blocked issues blocked"
 
 # ---------- conversation ----------
 

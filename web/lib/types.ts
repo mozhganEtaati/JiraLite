@@ -213,6 +213,7 @@ export type BoardCardIssue = {
   type: IssueTypeName;
   priority: PriorityName;
   assignee: UserSummary | null;
+  isBlocked: boolean;
 };
 
 export type BoardColumnGroup = { columnId: string; issues: BoardCardIssue[] };
@@ -250,6 +251,9 @@ export type Issue = {
   reporter: UserSummary;
   dueDateUtc: string | null;
   estimate: number | null;
+  isBlocked: boolean;
+  blockedReason: string | null;
+  blockedSinceUtc: string | null;
   labels: IssueLabel[];
   subtaskCount: number;
   rowVersion: string;
@@ -289,6 +293,59 @@ export type SprintItem = {
 };
 
 export type Sprint = SprintItem & { goal: string | null };
+
+/* ── sprint report ────────────────────────────────────────── */
+
+export type HealthState = "OnTrack" | "AtRisk" | "OffTrack";
+
+export type SprintReport = {
+  sprint: Sprint & { carriedForwardIssueCount: number | null };
+  /** Null while the sprint is still Planned — nothing has elapsed, so there is no pace. */
+  pace: {
+    totalDays: number;
+    elapsedDays: number;
+    remainingDays: number;
+    expectedPercent: number;
+  } | null;
+  progress: {
+    issues: { total: number; done: number; open: number };
+    points: {
+      total: number;
+      done: number;
+      open: number;
+      unestimatedIssues: number;
+    };
+    donePercentByIssues: number;
+    donePercentByPoints: number;
+  };
+  byStatus: { name: string; count: number; points: number; isDone: boolean }[];
+  byAssignee: {
+    user: UserSummary | null;
+    total: number;
+    done: number;
+    open: number;
+    points: number;
+    blocked: number;
+  }[];
+  risks: {
+    blocked: {
+      id: string;
+      key: string;
+      title: string;
+      blockedReason: string | null;
+      blockedSinceUtc: string | null;
+      blockedDays: number;
+    }[];
+    overdueCount: number;
+    dueAfterSprintEndCount: number;
+    unassignedCount: number;
+    unestimatedCount: number;
+  };
+  health: {
+    state: HealthState | null;
+    reasons: { code: string; detail: string }[];
+  };
+};
 
 /* ── comments, attachments, labels ────────────────────────── */
 

@@ -33,6 +33,7 @@ import {
   Field,
   Loading,
   LoadMore,
+  Modal,
   PageHead,
   Section,
 } from "@/components/kit";
@@ -182,6 +183,36 @@ function IssueDetail({
       />
 
       <ErrorNote error={save.error ?? remove.error} className="mb-3" />
+
+      {/*
+        A blocker is the one thing on this page that stops the work, so it is
+        stated across the top rather than filed in the sidebar — and it carries
+        its reason, because a blocker without one cannot be cleared by anyone
+        who was not in the room.
+      */}
+      {issue.isBlocked && (
+        <div
+          className="card mb-3 border-[var(--color-pink-soft)] bg-[var(--color-pink-wash)] px-3 py-2.5"
+          role="status"
+        >
+          <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+            <span
+              className="text-[13px] font-semibold"
+              style={{ color: "var(--color-over)" }}
+            >
+              Blocked
+            </span>
+            {issue.blockedSinceUtc && (
+              <span className="t-meta">since {ago(issue.blockedSinceUtc)}</span>
+            )}
+          </div>
+          {issue.blockedReason && (
+            <p className="mt-1 text-[13px] whitespace-pre-wrap">
+              {issue.blockedReason}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(260px,1fr)]">
         <div className="space-y-6">
@@ -353,6 +384,10 @@ function IssueDetail({
               </span>
             </Row>
 
+            <Row label="Blocked">
+              <BlockControl issue={issue} canWrite={canWrite} onChange={refresh} />
+            </Row>
+
             <Row label="Rank">
               <span className="t-meta truncate" title={issue.rank}>
                 {issue.rank}
@@ -395,6 +430,136 @@ function Row({
       <span className="t-eyebrow shrink-0 text-[10px]">{label}</span>
       <span className="min-w-0 text-right">{children}</span>
     </div>
+  );
+}
+
+/* ── blocked ──────────────────────────────────────────────────
+   Both calls carry the row version the page was loaded with, so
+   two people clearing the same blocker at once is a 409 rather
+   than one of them silently losing.
+   ─────────────────────────────────────────────────────────── */
+
+function BlockControl({
+  issue,
+  canWrite,
+  onChange,
+}: {
+  issue: Issue;
+  canWrite: boolean;
+  onChange: () => void;
+}) {
+  const qc = useQueryClient();
+  const [asking, setAsking] = useState(false);
+  const [reason, setReason] = useState("");
+
+  const settle = () => {
+    onChange();
+    // The board draws a mark on blocked cards, so it is stale the moment
+    // this changes.
+    qc.invalidateQueries({ queryKey: ["board-issues"] });
+    qc.invalidateQueries({ queryKey: ["sprint-report"] });
+  };
+
+  const block = useMutation({
+    mutationFn: () =>
+      api.post(`/api/issues/${issue.id}/block`, {
+        reason: reason.trim(),
+        rowVersion: issue.rowVersion,
+      }),
+    onSuccess: () => {
+      setAsking(false);
+      setReason("");
+      settle();
+    },
+  });
+
+  const unblock = useMutation({
+    mutationFn: () =>
+      api.post(`/api/issues/${issue.id}/unblock`, {
+        rowVersion: issue.rowVersion,
+      }),
+    onSuccess: settle,
+  });
+
+  if (!canWrite) {
+    return issue.isBlocked ? (
+      <span className="chip chip-signal">Blocked</span>
+    ) : (
+      <span className="t-meta">No</span>
+    );
+  }
+
+  return (
+    <>
+      {issue.isBlocked ? (
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={() => unblock.mutate()}
+          disabled={unblock.isPending}
+        >
+          {unblock.isPending ? "Clearing…" : "Unblock"}
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={() => {
+            setReason("");
+            setAsking(true);
+          }}
+        >
+          Mark blocked
+        </button>
+      )}
+
+      <Modal
+        open={asking}
+        onClose={() => setAsking(false)}
+        title={`Block ${issue.key}`}
+      >
+        <form
+          className="space-y-3.5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            block.mutate();
+          }}
+        >
+          <Field
+            label="What is blocking it?"
+            hint="Whoever picks this up next reads this instead of asking."
+          >
+            <textarea
+              className="field"
+              rows={3}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              maxLength={500}
+              required
+            />
+          </Field>
+          <ErrorNote error={block.error} />
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => setAsking(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={block.isPending || !reason.trim()}
+            >
+              {block.isPending ? "Blocking…" : "Mark blocked"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <ErrorNote error={unblock.error} className="mt-2" />
+    </>
   );
 }
 

@@ -13,6 +13,8 @@ public class Sprint
     public DateOnly PlannedEndDateUtc { get; set; }
     public DateTime? StartedAtUtc { get; set; }
     public DateTime? CompletedAtUtc { get; set; }
+    /// <summary>Issues carried out of the Sprint on completion (BR-05). Null on Sprints completed before this was recorded.</summary>
+    public int? CarriedForwardIssueCount { get; set; }
     public Guid CreatedByUserId { get; init; }
     public DateTime CreatedAtUtc { get; init; }
 }
